@@ -29,7 +29,7 @@ abstract contract SageCore is ReentrancyGuard {
   uint8 public constant TRANSITION_SET_FLAGS = 3;
 
   // State variables
-  uint32 private _nextAssetId = 1;
+  uint256 private _nextAssetId = 1;
 
   // === STORAGE TIERS ===
 
@@ -172,8 +172,8 @@ abstract contract SageCore is ReentrancyGuard {
   error NotOwner();
   error ReceiverInventoryFull();
   error AssetNotFoundInInventory();
-  error InvalidParameter();
-  error AssetNotInInventory();
+  error AlreadyAtMaxTier();
+  error AssetIdOverflow();
   error AssetDoesNotExist(uint256 assetId);
   error AssetIsLocked();
   error AssetAlreadyLocked();
@@ -398,10 +398,11 @@ abstract contract SageCore is ReentrancyGuard {
       revert InventoryFull();
     }
 
-    // Asset ID allocation with uint32 consistency
+    // Asset ID allocation with uint32 guard
     assetId = _nextAssetId++;
-    // Note: No overflow check needed since _nextAssetId is uint32
-    // Solidity 0.8+ will automatically revert on uint32 overflow
+    if (assetId > type(uint32).max) {
+      revert AssetIdOverflow();
+    }
 
     // Sanitize flags – strip reserved bits (lock)
     // Ensure engine, not caller, controls the lock bit
@@ -774,7 +775,7 @@ abstract contract SageCore is ReentrancyGuard {
     uint8 transitionId,
     uint256[] calldata assetIds,
     bytes calldata data
-  ) internal pure {
+  ) internal pure virtual {
     if (transitionId == TRANSITION_NOOP) {
       // No additional validation
       return;
@@ -809,7 +810,7 @@ abstract contract SageCore is ReentrancyGuard {
     uint8 transitionId,
     uint256[] calldata assetIds,
     bytes calldata data
-  ) internal {
+  ) internal virtual {
     if (transitionId == TRANSITION_NOOP) {
       // Do nothing
       return;
@@ -1152,7 +1153,7 @@ abstract contract SageCore is ReentrancyGuard {
 
     // Check if already at maximum tier
     if (currentTier == StorageTier.Tier100) {
-      revert InvalidParameter(); // Already at max tier
+      revert AlreadyAtMaxTier();
     }
 
     // Calculate upgrade cost from configurable fees

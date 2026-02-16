@@ -463,7 +463,7 @@ describe("SageCore (via TestGame)", function () {
       }
       await expect(
         game.connect(alice).upgradeStorageTier({ value: ethers.parseEther("1") })
-      ).to.be.revertedWithCustomError(game, "InvalidParameter");
+      ).to.be.revertedWithCustomError(game, "AlreadyAtMaxTier");
     });
 
     it("should revert upgrade with insufficient payment", async function () {
