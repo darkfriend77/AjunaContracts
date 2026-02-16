@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="en" style="--color-accent: #6290AF">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CasinoJam — Slot Machine</title>
+  <style>
+    /* ── Polka-Xplo Base Theme ── */
+    :root {
+      --color-bg: #09090b;
+      --color-surface: #18181b;
+      --color-border: #27272a;
+      --color-accent: #6290AF;
+      --color-text-primary: #f4f4f5;
+      --color-text-secondary: #a1a1aa;
+      --color-text-muted: #71717a;
+      --color-text-dim: #52525b;
+      --font-mono: "JetBrains Mono", "Fira Code", monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text-primary);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--color-surface); }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 9999px; }
+
+    /* ── Header ── */
+    .header {
+      position: relative; overflow: hidden;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .header-banner {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, #6290AF18 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .header-inner {
+      position: relative; max-width: 80rem; margin: 0 auto;
+      padding: 1rem; display: flex; align-items: center;
+      justify-content: space-between; gap: 1rem;
+    }
+    .header-brand { display: flex; align-items: center; gap: 0.5rem; }
+    .header-logo {
+      display: flex; align-items: center; justify-content: center;
+      width: 2.25rem; height: 2.25rem; border-radius: 0.5rem;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1);
+    }
+    .header-logo svg { width: 20px; height: 20px; color: var(--color-accent); }
+    .header-title { font-size: 1rem; font-weight: 700; color: var(--color-accent); }
+    .header-subtitle { font-size: 0.75rem; color: var(--color-text-muted); }
+    .header-right { display: flex; align-items: center; gap: 0.75rem; }
+
+    /* ── Main ── */
+    .main {
+      flex: 1; max-width: 80rem; width: 100%; margin: 0 auto;
+      padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 1.5rem;
+    }
+
+    /* ── Connection Bar ── */
+    .connect-bar {
+      display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end;
+    }
+    .field { display: flex; flex-direction: column; gap: 0.25rem; }
+    .field-grow { flex: 1; min-width: 200px; }
+    .field label {
+      font-size: 0.6875rem; color: var(--color-text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+    }
+    .field input, .field select {
+      width: 100%; border-radius: 0.5rem;
+      border: 1px solid rgba(63,63,70,0.6);
+      background: rgba(24,24,27,0.8); padding: 0.375rem 0.75rem;
+      font-size: 0.875rem; color: var(--color-text-primary);
+      font-family: var(--font-mono);
+      transition: border-color 150ms, box-shadow 150ms;
+    }
+    .field select {
+      cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2371717a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 0.6rem center;
+      padding-right: 2rem; font-family: system-ui, sans-serif;
+    }
+    .field input::placeholder { color: var(--color-text-muted); font-family: system-ui, sans-serif; }
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: rgba(98,144,175,0.5);
+      box-shadow: 0 0 0 1px rgba(98,144,175,0.3);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
+      border-radius: 0.375rem; border: 1px solid var(--color-border);
+      background: #27272a; padding: 0.375rem 0.75rem;
+      font-size: 0.875rem; font-weight: 500; color: var(--color-text-secondary);
+      cursor: pointer; transition: background-color 150ms, color 150ms; white-space: nowrap;
+    }
+    .btn:hover { background: #3f3f46; color: #e4e4e7; }
+    .btn-accent {
+      background: var(--color-accent); border-color: var(--color-accent); color: #fff;
+    }
+    .btn-accent:hover { filter: brightness(1.15); color: #fff; }
+    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-danger { background: #7f1d1d; border-color: #991b1b; color: #fca5a5; }
+    .btn-danger:hover { background: #991b1b; color: #fecaca; }
+    .btn-success { background: #14532d; border-color: #166534; color: #86efac; }
+    .btn-success:hover { background: #166534; color: #bbf7d0; }
+
+    /* ── Status dot ── */
+    .status-dot {
+      display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 9999px;
+    }
+    .status-dot.connected { background: #4ade80; }
+    .status-dot.disconnected { background: #f87171; }
+    .status-dot.connecting { background: #facc15; animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;
+    }
+    @media (min-width: 640px) { .stats-bar { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1024px) { .stats-bar { grid-template-columns: repeat(5, 1fr); } }
+
+    .stat-card {
+      border-radius: 0.5rem; border: 1px solid var(--color-border);
+      background: rgb(24 24 27 / 0.5); padding: 0.75rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .stat-icon {
+      display: flex; align-items: center; justify-content: center;
+      width: 2.25rem; height: 2.25rem; border-radius: 0.5rem;
+      background: #27272a; flex-shrink: 0;
+    }
+    .stat-icon svg { width: 18px; height: 18px; color: var(--color-text-muted); }
+    .stat-label {
+      font-size: 0.6875rem; color: var(--color-text-muted); line-height: 1.2;
+    }
+    .stat-value {
+      font-size: 0.875rem; font-weight: 600; color: var(--color-text-primary);
+      font-variant-numeric: tabular-nums; font-family: var(--font-mono);
+    }
+
+    /* ── Card ── */
+    .card {
+      border-radius: 0.5rem; border: 1px solid var(--color-border);
+      background: rgb(24 24 27 / 0.5); padding: 1.25rem;
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .card-title { font-size: 1.125rem; font-weight: 600; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex; gap: 0.25rem;
+      border-bottom: 1px solid var(--color-border); margin-bottom: 1rem;
+    }
+    .tab {
+      padding: 0.625rem 1rem; font-size: 0.875rem; font-weight: 500;
+      border: none; background: none; cursor: pointer;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      color: var(--color-text-muted); transition: color 150ms;
+    }
+    .tab:hover { color: #d4d4d8; }
+    .tab.active { color: var(--color-text-primary); border-bottom-color: var(--color-accent); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex; align-items: center; border-radius: 0.375rem;
+      padding: 0.125rem 0.5rem; font-size: 0.75rem; font-weight: 500;
+    }
+    .badge-info { background: #172554; color: #60a5fa; border: 1px solid rgb(30 64 175 / 0.5); }
+    .badge-success { background: #052e16; color: #4ade80; border: 1px solid rgb(22 101 52 / 0.5); }
+    .badge-warning { background: #422006; color: #fbbf24; border: 1px solid rgb(161 98 7 / 0.5); }
+    .badge-error { background: #450a0a; color: #f87171; border: 1px solid rgb(153 27 27 / 0.5); }
+    .badge-accent { background: #6290AF18; color: var(--color-accent); border: 1px solid #6290AF40; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block; width: 1rem; height: 1rem;
+      border: 2px solid #52525b; border-top-color: var(--color-accent);
+      border-radius: 9999px; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed; top: 1rem; right: 1rem; z-index: 1000;
+      display: flex; flex-direction: column; gap: 0.5rem;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      border-radius: 0.5rem; padding: 0.75rem 1rem;
+      font-size: 0.8125rem; max-width: 380px;
+      backdrop-filter: blur(12px);
+      animation: toastIn 300ms ease-out;
+      border: 1px solid var(--color-border);
+      background: rgb(24 24 27 / 0.9);
+    }
+    .toast.success { border-color: rgb(22 101 52 / 0.5); color: #4ade80; }
+    .toast.error { border-color: rgb(153 27 27 / 0.5); color: #f87171; }
+    .toast.info { color: #d4d4d8; }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(1rem); } }
+
+    /* ── Slot Machine Canvas ── */
+    .slot-container {
+      display: flex; flex-direction: column; align-items: center; gap: 1rem;
+    }
+    .slot-canvas-wrap {
+      position: relative; border-radius: 0.75rem; overflow: hidden;
+      border: 2px solid var(--color-border);
+      background: var(--color-surface);
+      box-shadow: 0 0 40px rgba(98,144,175,0.08);
+    }
+    #slotCanvas { display: block; }
+
+    .slot-controls {
+      display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;
+      justify-content: center;
+    }
+    .spin-btn {
+      padding: 0.75rem 2.5rem; font-size: 1.125rem; font-weight: 700;
+      border-radius: 0.5rem; border: 2px solid var(--color-accent);
+      background: var(--color-accent); color: #fff; cursor: pointer;
+      transition: all 200ms; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .spin-btn:hover:not(:disabled) {
+      filter: brightness(1.2);
+      box-shadow: 0 0 20px rgba(98,144,175,0.3);
+    }
+    .spin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Payout Table ── */
+    .payout-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+    .payout-table th {
+      text-align: left; font-size: 0.6875rem; font-weight: 500;
+      color: var(--color-text-muted); text-transform: uppercase;
+      letter-spacing: 0.05em; padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .payout-table td {
+      padding: 0.375rem 0.75rem; color: var(--color-text-secondary);
+      border-bottom: 1px solid rgb(39 39 42 / 0.3);
+      font-family: var(--font-mono); font-size: 0.75rem;
+    }
+    .payout-table tr:hover { background: rgb(39 39 42 / 0.2); }
+    .payout-table .sym { font-size: 1rem; text-align: center; }
+
+    /* ── Seat Browser ── */
+    .seat-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.75rem;
+    }
+    .seat-card {
+      border-radius: 0.5rem; border: 1px solid var(--color-border);
+      background: rgba(24,24,27,0.5); padding: 1rem;
+    }
+    .seat-card .seat-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;
+    }
+    .seat-card .seat-title { font-weight: 600; font-size: 0.875rem; }
+    .seat-meta { font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+    .seat-meta span { display: block; margin-bottom: 0.125rem; }
+
+    /* ── Form row ── */
+    .form-row {
+      display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Spin History ── */
+    .spin-history { max-height: 300px; overflow-y: auto; }
+    .spin-entry {
+      padding: 0.5rem 0; border-bottom: 1px solid rgb(39 39 42 / 0.3);
+      font-size: 0.8125rem;
+    }
+    .spin-entry:last-child { border-bottom: none; }
+    .spin-symbols {
+      font-size: 1.25rem; letter-spacing: 0.25rem; margin-bottom: 0.25rem;
+    }
+    .spin-reward { font-family: var(--font-mono); }
+    .spin-reward.win { color: #4ade80; font-weight: 600; }
+    .spin-reward.lose { color: var(--color-text-dim); }
+
+    /* ── Onboarding ── */
+    .onboarding {
+      text-align: center; padding: 2rem 1rem;
+    }
+    .onboarding h2 {
+      font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;
+      color: var(--color-accent);
+    }
+    .onboarding p { color: var(--color-text-muted); margin-bottom: 1.5rem; font-size: 0.875rem; }
+
+    /* ── Section headers ── */
+    .section-title {
+      font-size: 0.75rem; font-weight: 600; color: var(--color-text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;
+    }
+
+    /* ── Hide helper ── */
+    .hidden { display: none !important; }
+
+    /* ── Result box ── */
+    .result-box {
+      border-radius: 0.375rem; background: var(--color-surface);
+      border: 1px solid var(--color-border); padding: 0.75rem;
+      font-size: 0.75rem; color: #d4d4d8; font-family: var(--font-mono);
+      white-space: pre-wrap; word-break: break-all;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      border-top: 1px solid var(--color-border); padding: 1rem;
+      text-align: center; font-size: 0.75rem; color: var(--color-text-muted);
+    }
+    .footer a { color: var(--color-accent); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    /* ── Win Overlay ── */
+    .win-overlay {
+      position: absolute; inset: 0; display: flex; align-items: center;
+      justify-content: center; pointer-events: none; opacity: 0;
+      transition: opacity 400ms;
+    }
+    .win-overlay.show { opacity: 1; }
+    .win-text {
+      font-size: 2.5rem; font-weight: 800; color: #fbbf24;
+      text-shadow: 0 0 30px rgba(251,191,36,0.5), 0 2px 8px rgba(0,0,0,0.5);
+      font-family: var(--font-mono);
+    }
+
+    /* ── Machine config grid ── */
+    .config-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+    }
+    @media (max-width: 639px) { .config-grid { grid-template-columns: 1fr; } }
+
+    /* ── Event log ── */
+    .event-log {
+      max-height: 200px; overflow-y: auto; font-size: 0.75rem;
+      font-family: var(--font-mono); color: var(--color-text-secondary);
+    }
+    .event-log .ev-entry { padding: 0.25rem 0; border-bottom: 1px solid rgb(39 39 42 / 0.2); }
+    .event-log .ev-name { color: var(--color-accent); font-weight: 600; }
+    .event-log .ev-time { color: var(--color-text-dim); font-size: 0.6875rem; }
+
+    /* ── Responsive ── */
+    @media (max-width: 639px) {
+      .header-inner { flex-direction: column; align-items: flex-start; }
+      .stats-bar { grid-template-columns: 1fr 1fr; }
+      .slot-canvas-wrap { max-width: 100%; }
+      #slotCanvas { width: 100% !important; height: auto !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════ HEADER ══════════ -->
+  <header class="header">
+    <div class="header-banner"></div>
+    <div class="header-inner">
+      <div class="header-brand">
+        <div class="header-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="M7 12h.01M12 12h.01M17 12h.01"/>
+            <path d="M2 8h20"/>
+          </svg>
+        </div>
+        <div>
+          <div class="header-title">CasinoJam</div>
+          <div class="header-subtitle">Slot Machine on Ajuna Network</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="status-dot disconnected" id="statusDot"></span>
+        <span style="font-size: 0.75rem; color: var(--color-text-muted)" id="statusText">Disconnected</span>
+        <a href="deploy.html" class="btn btn-sm">Deploy</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════ MAIN ══════════ -->
+  <main class="main">
+
+    <!-- Connection bar -->
+    <div class="connect-bar">
+      <div class="field field-grow">
+        <label>RPC Endpoint</label>
+        <input id="rpcUrl" type="text" value="http://127.0.0.1:8545" placeholder="http://..." />
+      </div>
+      <div class="field field-grow">
+        <label>CasinoJam Contract</label>
+        <input id="contractAddr" type="text" placeholder="0x..." />
+      </div>
+      <button class="btn btn-accent" id="connectBtn">Connect</button>
+    </div>
+
+    <!-- Stats bar (visible when connected) -->
+    <div class="stats-bar hidden" id="statsBar">
+      <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+        <div><div class="stat-label">Block</div><div class="stat-value" id="statBlock">—</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 010-4h12v4"/><path d="M4 6v12a2 2 0 002 2h14v-4"/><path d="M18 12a2 2 0 000 4h4v-4h-4z"/></svg></div>
+        <div><div class="stat-label">Balance</div><div class="stat-value" id="statBalance">—</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg></div>
+        <div><div class="stat-label">Player Credits</div><div class="stat-value" id="statPlayerCredits">—</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <div><div class="stat-label">Exchange Rate</div><div class="stat-value" id="statRate">—</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+        <div><div class="stat-label">Pending Withdraw</div><div class="stat-value" id="statPending">—</div></div>
+      </div>
+    </div>
+
+    <!-- Tab navigation -->
+    <div class="tabs hidden" id="mainTabs">
+      <button class="tab active" data-tab="player">Casino Floor</button>
+      <button class="tab" data-tab="owner">Machine Owner</button>
+      <button class="tab" data-tab="events">Event Log</button>
+    </div>
+
+    <!-- ══════════ PLAYER TAB ══════════ -->
+    <div class="tab-panel active" id="tab-player">
+      <!-- Onboarding (shown when no player exists) -->
+      <div id="playerOnboarding" class="card">
+        <div class="onboarding">
+          <h2>Welcome to CasinoJam</h2>
+          <p>Connect your wallet and create a player to start spinning the reels.</p>
+          <button class="btn btn-accent" id="createPlayerBtn" disabled>Create Player</button>
+        </div>
+      </div>
+
+      <!-- Player dashboard (shown after player exists) -->
+      <div id="playerDashboard" class="hidden" style="display:flex;flex-direction:column;gap:1.5rem;">
+
+        <!-- Credits management -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Credits</span>
+            <span class="badge badge-accent" id="playerIdBadge">—</span>
+          </div>
+          <div class="form-row">
+            <div class="field" style="width: 160px;">
+              <label>Amount (credits)</label>
+              <input id="creditAmount" type="number" min="1" value="100" />
+            </div>
+            <button class="btn btn-success" id="depositBtn">Deposit</button>
+            <button class="btn" id="withdrawCreditsBtn">Withdraw Credits</button>
+            <button class="btn" id="withdrawEthBtn">Withdraw ETH</button>
+          </div>
+        </div>
+
+        <!-- Seat browser -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Available Seats</span>
+            <button class="btn btn-sm" id="refreshSeatsBtn">Refresh</button>
+          </div>
+          <div class="form-row">
+            <div class="field" style="width: 200px;">
+              <label>Seat ID to reserve</label>
+              <input id="reserveSeatId" type="number" min="1" placeholder="Seat ID" />
+            </div>
+            <div class="field" style="width: 140px;">
+              <label>Duration (1-12)</label>
+              <input id="reserveDuration" type="number" min="1" max="12" value="3" />
+            </div>
+            <button class="btn btn-accent" id="reserveBtn">Reserve Seat</button>
+            <button class="btn" id="releaseBtn">Release Seat</button>
+          </div>
+          <div class="seat-grid" id="seatGrid">
+            <div style="color: var(--color-text-dim); font-size: 0.8125rem; font-style: italic; padding: 1rem 0;">
+              Connect and browse machines to see available seats.
+            </div>
+          </div>
+        </div>
+
+        <!-- Slot machine -->
+        <div class="card" id="slotSection">
+          <div class="card-header">
+            <span class="card-title">Slot Machine</span>
+            <span class="badge badge-info" id="seatBadge">Not seated</span>
+          </div>
+          <div class="slot-container">
+            <div class="slot-canvas-wrap">
+              <canvas id="slotCanvas" width="600" height="240"></canvas>
+              <div class="win-overlay" id="winOverlay">
+                <div class="win-text" id="winText"></div>
+              </div>
+            </div>
+            <div class="slot-controls">
+              <div class="field" style="width:100px;">
+                <label>Spins (1-4)</label>
+                <input id="spinCount" type="number" min="1" max="4" value="1" />
+              </div>
+              <button class="spin-btn" id="spinBtn" disabled>SPIN</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Spin history -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Spin History</span>
+            <button class="btn btn-sm" id="clearHistoryBtn">Clear</button>
+          </div>
+          <div class="spin-history" id="spinHistory">
+            <div style="color: var(--color-text-dim); font-size: 0.8125rem; font-style: italic;">
+              No spins yet. Reserve a seat and hit SPIN!
+            </div>
+          </div>
+        </div>
+
+        <!-- Payout table -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">Payout Table</span></div>
+          <table class="payout-table">
+            <thead>
+              <tr><th>Symbol</th><th>Name</th><th>Weight</th><th>3-of-a-kind</th><th>Bonus</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="sym">·</td><td>Blank</td><td>52</td><td>0×</td><td>0×</td></tr>
+              <tr><td class="sym">🍒</td><td>Cherry</td><td>43</td><td>5×</td><td>1×</td></tr>
+              <tr><td class="sym">🍋</td><td>Lemon</td><td>38</td><td>10×</td><td>2×</td></tr>
+              <tr><td class="sym">🍊</td><td>Orange</td><td>34</td><td>25×</td><td>2×</td></tr>
+              <tr><td class="sym">🫐</td><td>Plum</td><td>28</td><td>50×</td><td>2×</td></tr>
+              <tr><td class="sym">🍉</td><td>Watermelon</td><td>23</td><td>100×</td><td>2×</td></tr>
+              <tr><td class="sym">🍇</td><td>Grape</td><td>17</td><td>200×</td><td>4×</td></tr>
+              <tr><td class="sym">🔔</td><td>Bell</td><td>12</td><td>500×</td><td>4×</td></tr>
+              <tr><td class="sym">▰</td><td>Bar</td><td>6</td><td>750×</td><td>4×</td></tr>
+              <tr><td class="sym">💎</td><td>Diamond</td><td>3</td><td>1500×</td><td>8×</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ OWNER TAB ══════════ -->
+    <div class="tab-panel" id="tab-owner">
+      <!-- No machine onboarding -->
+      <div id="ownerOnboarding" class="card">
+        <div class="onboarding">
+          <h2>Machine Owner</h2>
+          <p>Create your slot machine to start earning from players.</p>
+          <button class="btn btn-accent" id="createMachineBtn" disabled>Create Machine</button>
+        </div>
+      </div>
+
+      <!-- Machine dashboard -->
+      <div id="ownerDashboard" class="hidden" style="display:flex;flex-direction:column;gap:1.5rem;">
+
+        <!-- Machine info -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">My Machine</span>
+            <span class="badge badge-accent" id="machineIdBadge">—</span>
+          </div>
+          <div class="stats-bar" style="margin-bottom: 1rem;">
+            <div class="stat-card">
+              <div><div class="stat-label">Machine Credits</div><div class="stat-value" id="machineCredits">—</div></div>
+            </div>
+            <div class="stat-card">
+              <div><div class="stat-label">Seats Linked</div><div class="stat-value" id="machineSeatsLinked">—</div></div>
+            </div>
+            <div class="stat-card">
+              <div><div class="stat-label">Seat Limit</div><div class="stat-value" id="machineSeatLimit">—</div></div>
+            </div>
+            <div class="stat-card">
+              <div><div class="stat-label">Max Spins</div><div class="stat-value" id="machineMaxSpins">—</div></div>
+            </div>
+            <div class="stat-card">
+              <div><div class="stat-label">Stake</div><div class="stat-value" id="machineStake">—</div></div>
+            </div>
+          </div>
+
+          <!-- Deposit to machine -->
+          <div class="section-title">Fund Machine</div>
+          <div class="form-row">
+            <div class="field" style="width: 160px;">
+              <label>Credits to deposit</label>
+              <input id="machineDepositAmount" type="number" min="1" value="1000" />
+            </div>
+            <button class="btn btn-success" id="machineDepositBtn">Deposit</button>
+            <button class="btn" id="machineWithdrawBtn">Withdraw Credits</button>
+          </div>
+        </div>
+
+        <!-- Machine config -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">Configure Machine</span></div>
+          <p style="font-size: 0.8125rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+            Machine must have 0 linked seats to reconfigure.
+          </p>
+          <div class="config-grid">
+            <div class="field">
+              <label>Seat limit (1-15)</label>
+              <input id="cfgSeatLimit" type="number" min="1" max="15" value="1" />
+            </div>
+            <div class="field">
+              <label>Max spins (1-4)</label>
+              <input id="cfgMaxSpins" type="number" min="1" max="4" value="4" />
+            </div>
+            <div class="field">
+              <label>Stake factor (0-6)</label>
+              <input id="cfgStakeFactor" type="number" min="0" max="6" value="0" />
+            </div>
+            <div class="field">
+              <label>Stake multiplier (0-9)</label>
+              <input id="cfgStakeMult" type="number" min="0" max="9" value="1" />
+            </div>
+          </div>
+          <div style="margin-top: 1rem;">
+            <button class="btn btn-accent" id="configMachineBtn">Apply Config</button>
+          </div>
+        </div>
+
+        <!-- Seat management -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">Seat Management</span></div>
+          <div class="form-row">
+            <div class="field" style="width: 140px;">
+              <label>Rent duration (1-9)</label>
+              <input id="rentDuration" type="number" min="1" max="9" value="3" />
+            </div>
+            <button class="btn btn-accent" id="rentSeatBtn">Rent New Seat</button>
+          </div>
+          <div class="form-row">
+            <div class="field" style="width: 140px;">
+              <label>Seat ID to return</label>
+              <input id="returnSeatId" type="number" min="1" placeholder="Seat ID" />
+            </div>
+            <button class="btn btn-danger" id="returnSeatBtn">Return Seat</button>
+          </div>
+          <div class="form-row">
+            <div class="field" style="width: 140px;">
+              <label>Victim Human ID</label>
+              <input id="kickVictimId" type="number" min="1" placeholder="Victim ID" />
+            </div>
+            <div class="field" style="width: 140px;">
+              <label>Seat ID</label>
+              <input id="kickSeatId" type="number" min="1" placeholder="Seat ID" />
+            </div>
+            <button class="btn btn-danger" id="kickBtn">Kick Player</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ EVENTS TAB ══════════ -->
+    <div class="tab-panel" id="tab-events">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Contract Events</span>
+          <button class="btn btn-sm" id="clearEventsBtn">Clear</button>
+        </div>
+        <div class="event-log" id="eventLog">
+          <div style="color: var(--color-text-dim); font-size: 0.8125rem; font-style: italic;">
+            Events will appear here once connected.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ══════════ FOOTER ══════════ -->
+  <footer class="footer">
+    CasinoJam — Built on <a href="https://ajuna.io" target="_blank">Ajuna Network</a> SAGE
+  </footer>
+
+  <!-- ══════════ TOASTS ══════════ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ══════════ SCRIPT ══════════ -->
+  <script type="module">
+    import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.min.js";
+
+    // ═══════════════════════════════════════════════════════════════
+    //  SYMBOL DEFINITIONS
+    // ═══════════════════════════════════════════════════════════════
+
+    const SYMBOLS = [
+      { name: 'Blank',      emoji: '·',  color: '#3f3f46', weight: 52, payout3: 0,    bonusMul: 0 },
+      { name: 'Cherry',     emoji: '🍒', color: '#ef4444', weight: 43, payout3: 5,    bonusMul: 1 },
+      { name: 'Lemon',      emoji: '🍋', color: '#eab308', weight: 38, payout3: 10,   bonusMul: 2 },
+      { name: 'Orange',     emoji: '🍊', color: '#f97316', weight: 34, payout3: 25,   bonusMul: 2 },
+      { name: 'Plum',       emoji: '🫐', color: '#8b5cf6', weight: 28, payout3: 50,   bonusMul: 2 },
+      { name: 'Watermelon', emoji: '🍉', color: '#22c55e', weight: 23, payout3: 100,  bonusMul: 2 },
+      { name: 'Grape',      emoji: '🍇', color: '#a855f7', weight: 17, payout3: 200,  bonusMul: 4 },
+      { name: 'Bell',       emoji: '🔔', color: '#fbbf24', weight: 12, payout3: 500,  bonusMul: 4 },
+      { name: 'Bar',        emoji: '▰',  color: '#6290AF', weight: 6,  payout3: 750,  bonusMul: 4 },
+      { name: 'Diamond',    emoji: '💎', color: '#38bdf8', weight: 3,  payout3: 1500, bonusMul: 8 },
+    ];
+
+    // ═══════════════════════════════════════════════════════════════
+    //  CANVAS SLOT MACHINE RENDERER
+    // ═══════════════════════════════════════════════════════════════
+
+    class SlotMachine {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.W = canvas.width;
+        this.H = canvas.height;
+
+        // 5 reel columns: 3 main + 2 bonus
+        this.reelCount = 5;
+        this.reelWidth = this.W / this.reelCount;
+        this.symbolSize = 48;
+
+        // Animation state
+        this.reels = [0, 0, 0, 0, 0]; // current symbol indices
+        this.targetReels = [0, 0, 0, 0, 0];
+        this.spinning = [false, false, false, false, false];
+        this.spinOffset = [0, 0, 0, 0, 0]; // vertical scroll offset
+        this.spinSpeed = [0, 0, 0, 0, 0];
+        this.spinPhase = [0, 0, 0, 0, 0]; // 0=idle, 1=spinning, 2=stopping
+        this.stopTimers = [0, 0, 0, 0, 0];
+        this.isSpinning = false;
+        this.animFrame = null;
+
+        // Win flash
+        this.winFlash = 0;
+        this.lastWinReels = [];
+
+        this.draw();
+      }
+
+      draw() {
+        const { ctx, W, H } = this;
+        ctx.clearRect(0, 0, W, H);
+
+        // Background
+        ctx.fillStyle = '#0a0a0f';
+        ctx.fillRect(0, 0, W, H);
+
+        // Draw separators between main and bonus reels
+        ctx.strokeStyle = '#27272a';
+        ctx.lineWidth = 1;
+        for (let i = 1; i < this.reelCount; i++) {
+          const x = i * this.reelWidth;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, H);
+          ctx.stroke();
+        }
+
+        // Bonus divider (thicker line before reel 3)
+        ctx.strokeStyle = '#6290AF40';
+        ctx.lineWidth = 2;
+        const bonusX = 3 * this.reelWidth;
+        ctx.beginPath();
+        ctx.moveTo(bonusX, 0);
+        ctx.lineTo(bonusX, H);
+        ctx.stroke();
+
+        // Label "BONUS" above bonus reels
+        ctx.fillStyle = '#6290AF';
+        ctx.font = '600 10px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('BONUS', bonusX + this.reelWidth, 14);
+
+        // Reel labels
+        ctx.fillStyle = '#52525b';
+        ctx.font = '500 10px system-ui';
+        for (let i = 0; i < 3; i++) {
+          ctx.fillText(`REEL ${i + 1}`, (i + 0.5) * this.reelWidth, 14);
+        }
+        ctx.fillText('B1', (3.5) * this.reelWidth, 14);
+        ctx.fillText('B2', (4.5) * this.reelWidth, 14);
+
+        // Draw each reel
+        for (let i = 0; i < this.reelCount; i++) {
+          this.drawReel(i);
+        }
+
+        // Center line
+        ctx.strokeStyle = '#6290AF60';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, H / 2);
+        ctx.lineTo(W, H / 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      drawReel(reelIdx) {
+        const { ctx, H } = this;
+        const x = reelIdx * this.reelWidth;
+        const centerY = H / 2;
+        const offset = this.spinOffset[reelIdx];
+        const symIdx = this.reels[reelIdx];
+
+        // If spinning, show blur effect
+        if (this.spinPhase[reelIdx] === 1) {
+          // Draw 5 random symbols scrolling through
+          const cellH = 80;
+          for (let row = -2; row <= 2; row++) {
+            const y = centerY + row * cellH - (offset % cellH);
+            const randSym = Math.floor(Math.random() * SYMBOLS.length);
+            this.drawSymbol(x + this.reelWidth / 2, y, randSym, 0.3);
+          }
+        } else {
+          // Draw the settled symbol
+          const isWin = this.lastWinReels.includes(reelIdx);
+          const alpha = isWin ? 0.7 + 0.3 * Math.sin(this.winFlash * 0.1) : 1.0;
+          this.drawSymbol(x + this.reelWidth / 2, centerY, symIdx, alpha);
+
+          // Draw above/below symbols (faded)
+          const prevIdx = (symIdx + SYMBOLS.length - 1) % SYMBOLS.length;
+          const nextIdx = (symIdx + 1) % SYMBOLS.length;
+          this.drawSymbol(x + this.reelWidth / 2, centerY - 80, prevIdx, 0.2);
+          this.drawSymbol(x + this.reelWidth / 2, centerY + 80, nextIdx, 0.2);
+        }
+      }
+
+      drawSymbol(cx, cy, symIdx, alpha) {
+        const { ctx } = this;
+        const sym = SYMBOLS[symIdx];
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.font = '36px "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        if (symIdx === 0) {
+          // Blank — draw a dim dot
+          ctx.fillStyle = sym.color;
+          ctx.beginPath();
+          ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (symIdx === 8) {
+          // Bar — draw a geometric bar
+          ctx.fillStyle = sym.color;
+          ctx.fillRect(cx - 24, cy - 8, 48, 16);
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 11px var(--font-mono)';
+          ctx.fillText('BAR', cx, cy + 1);
+        } else {
+          // Emoji symbol
+          ctx.fillText(sym.emoji, cx, cy + 2);
+        }
+
+        // Symbol name below
+        ctx.globalAlpha = alpha * 0.5;
+        ctx.fillStyle = sym.color;
+        ctx.font = '500 9px system-ui';
+        ctx.fillText(sym.name.toUpperCase(), cx, cy + 30);
+
+        ctx.restore();
+      }
+
+      startSpin(targetSymbols) {
+        this.targetReels = [...targetSymbols];
+        this.isSpinning = true;
+        this.lastWinReels = [];
+        this.winFlash = 0;
+
+        for (let i = 0; i < this.reelCount; i++) {
+          this.spinPhase[i] = 1;
+          this.spinOffset[i] = 0;
+          this.spinSpeed[i] = 15 + Math.random() * 5;
+          this.stopTimers[i] = 20 + i * 15 + Math.random() * 10;
+        }
+
+        if (this.animFrame) cancelAnimationFrame(this.animFrame);
+        this.animate();
+      }
+
+      animate() {
+        let allDone = true;
+
+        for (let i = 0; i < this.reelCount; i++) {
+          if (this.spinPhase[i] === 1) {
+            this.spinOffset[i] += this.spinSpeed[i];
+            this.stopTimers[i]--;
+            if (this.stopTimers[i] <= 0) {
+              this.spinPhase[i] = 2;
+              this.spinSpeed[i] = 8;
+            }
+            allDone = false;
+          } else if (this.spinPhase[i] === 2) {
+            this.spinSpeed[i] *= 0.85;
+            if (this.spinSpeed[i] < 0.5) {
+              this.spinPhase[i] = 0;
+              this.reels[i] = this.targetReels[i];
+              this.spinOffset[i] = 0;
+            } else {
+              allDone = false;
+            }
+          }
+        }
+
+        this.draw();
+
+        if (allDone) {
+          this.isSpinning = false;
+          if (this.onSpinComplete) this.onSpinComplete();
+        } else {
+          this.animFrame = requestAnimationFrame(() => this.animate());
+        }
+      }
+
+      showWin(reelIndices, reward) {
+        this.lastWinReels = reelIndices;
+        this.winFlash = 0;
+
+        const flashAnim = () => {
+          this.winFlash++;
+          this.draw();
+          if (this.winFlash < 60) {
+            requestAnimationFrame(flashAnim);
+          } else {
+            this.lastWinReels = [];
+            this.draw();
+          }
+        };
+        flashAnim();
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  APPLICATION STATE
+    // ═══════════════════════════════════════════════════════════════
+
+    let readProvider = null;
+    let writeProvider = null;
+    let signer = null;
+    let contract = null;       // read-only
+    let contractWrite = null;  // signer-connected
+    let walletAddress = null;
+    let blockPollTimer = null;
+    let slotMachine = null;
+
+    // Player state
+    let playerHumanId = 0n;
+    let playerTrackerId = 0n;
+    let playerMachineId = 0n;
+    let playerSeatId = 0n;
+    let playerSeatMachineId = 0n;
+
+    // Event log
+    const eventEntries = [];
+    const spinHistoryEntries = [];
+
+    // ═══════════════════════════════════════════════════════════════
+    //  INITIALIZATION
+    // ═══════════════════════════════════════════════════════════════
+
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    // Slot machine init
+    slotMachine = new SlotMachine($('#slotCanvas'));
+
+    // Tab switching
+    $$('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        $$('.tab').forEach(t => t.classList.remove('active'));
+        $$('.tab-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        $(`#tab-${tab.dataset.tab}`).classList.add('active');
+      });
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    //  CONNECTION
+    // ═══════════════════════════════════════════════════════════════
+
+    $('#connectBtn').addEventListener('click', connect);
+
+    async function connect() {
+      const rpcUrl = $('#rpcUrl').value.trim();
+      const addr = $('#contractAddr').value.trim();
+
+      if (!addr) { toast('Enter a CasinoJam contract address', 'error'); return; }
+
+      setStatus('connecting', 'Connecting…');
+      $('#connectBtn').disabled = true;
+
+      try {
+        // Load ABI from artifact
+        let abi;
+        try {
+          const resp = await fetch('../../artifacts/contracts/CasinoJam/CasinoJam.sol/CasinoJam.json');
+          const artifact = await resp.json();
+          abi = artifact.abi;
+        } catch {
+          toast('Could not load ABI from artifacts. Run npx hardhat compile first.', 'error');
+          setStatus('disconnected', 'Disconnected');
+          $('#connectBtn').disabled = false;
+          return;
+        }
+
+        // Read-only provider
+        readProvider = new ethers.JsonRpcProvider(rpcUrl);
+        await readProvider.getBlockNumber(); // test connection
+
+        // Read-only contract
+        contract = new ethers.Contract(addr, abi, readProvider);
+
+        // Wallet provider (for write operations)
+        if (window.ethereum) {
+          writeProvider = new ethers.BrowserProvider(window.ethereum);
+          signer = await writeProvider.getSigner();
+          walletAddress = await signer.getAddress();
+          contractWrite = contract.connect(signer);
+        } else {
+          toast('No wallet detected — read-only mode', 'info');
+        }
+
+        setStatus('connected', walletAddress
+          ? `${walletAddress.slice(0, 6)}…${walletAddress.slice(-4)}`
+          : 'Read-only');
+
+        // Show UI elements
+        $('#statsBar').classList.remove('hidden');
+        $('#mainTabs').classList.remove('hidden');
+
+        // Enable buttons
+        $('#createPlayerBtn').disabled = false;
+        $('#createMachineBtn').disabled = false;
+
+        // Listen for events
+        setupEventListeners();
+
+        // Load player state
+        await loadPlayerState();
+        await loadMachineState();
+
+        // Start block polling
+        startBlockPolling();
+
+        toast('Connected to CasinoJam', 'success');
+
+      } catch (err) {
+        toast(`Connection failed: ${err.message}`, 'error');
+        setStatus('disconnected', 'Disconnected');
+      }
+
+      $('#connectBtn').disabled = false;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  BLOCK POLLING & STATS
+    // ═══════════════════════════════════════════════════════════════
+
+    function startBlockPolling() {
+      if (blockPollTimer) clearInterval(blockPollTimer);
+      updateStats();
+      blockPollTimer = setInterval(updateStats, 6000);
+    }
+
+    async function updateStats() {
+      if (!readProvider || !contract) return;
+      try {
+        const block = await readProvider.getBlockNumber();
+        $('#statBlock').textContent = block.toLocaleString();
+
+        if (walletAddress) {
+          const bal = await readProvider.getBalance(walletAddress);
+          $('#statBalance').textContent = formatEth(bal);
+
+          const pending = await contract.pendingWithdrawals(walletAddress);
+          $('#statPending').textContent = formatEth(pending);
+
+          if (playerHumanId > 0n) {
+            const credits = await contract.assetBalances(playerHumanId);
+            $('#statPlayerCredits').textContent = credits.toString();
+          }
+        }
+
+        const rate = await contract.exchangeRate();
+        $('#statRate').textContent = `${rate} wei`;
+
+      } catch (err) {
+        console.warn('Stats update failed:', err.message);
+      }
+    }
+
+    function formatEth(wei) {
+      const eth = ethers.formatEther(wei);
+      const val = parseFloat(eth);
+      if (val === 0) return '0';
+      if (val < 0.001) return '< 0.001';
+      return val.toFixed(4);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  PLAYER STATE
+    // ═══════════════════════════════════════════════════════════════
+
+    async function loadPlayerState() {
+      if (!walletAddress || !contract) return;
+
+      try {
+        playerHumanId = await contract.playerHumanId(walletAddress);
+        playerTrackerId = await contract.playerTrackerId(walletAddress);
+        playerMachineId = await contract.playerMachineId(walletAddress);
+
+        if (playerHumanId > 0n) {
+          $('#playerOnboarding').classList.add('hidden');
+          $('#playerDashboard').classList.remove('hidden');
+          $('#playerIdBadge').textContent = `Human #${playerHumanId}`;
+
+          // Check if seated
+          const human = await contract.getAsset(playerHumanId);
+          playerSeatId = readUint32LE(human.payload, 28);
+
+          if (playerSeatId > 0n) {
+            const seat = await contract.getAsset(playerSeatId);
+            playerSeatMachineId = readUint32LE(seat.payload, 28);
+            $('#seatBadge').textContent = `Seat #${playerSeatId}`;
+            $('#seatBadge').className = 'badge badge-success';
+            $('#spinBtn').disabled = false;
+          } else {
+            $('#seatBadge').textContent = 'Not seated';
+            $('#seatBadge').className = 'badge badge-info';
+            $('#spinBtn').disabled = true;
+          }
+        } else {
+          $('#playerOnboarding').classList.remove('hidden');
+          $('#playerDashboard').classList.add('hidden');
+        }
+      } catch (err) {
+        console.warn('loadPlayerState error:', err.message);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  MACHINE STATE
+    // ═══════════════════════════════════════════════════════════════
+
+    async function loadMachineState() {
+      if (!walletAddress || !contract) return;
+
+      try {
+        playerMachineId = await contract.playerMachineId(walletAddress);
+
+        if (playerMachineId > 0n) {
+          $('#ownerOnboarding').classList.add('hidden');
+          $('#ownerDashboard').classList.remove('hidden');
+          $('#machineIdBadge').textContent = `Machine #${playerMachineId}`;
+
+          const machine = await contract.getAsset(playerMachineId);
+          const p = machine.payload;
+          const seatLinked = readHighNibble(p, 7);
+          const seatLimit = readLowNibble(p, 7);
+          const stakeFactor = readHighNibble(p, 8);
+          const stakeMult = readLowNibble(p, 8);
+          const maxSpins = readLowNibble(p, 15);
+
+          const stake = calculateStake(stakeFactor, stakeMult);
+
+          $('#machineSeatsLinked').textContent = seatLinked;
+          $('#machineSeatLimit').textContent = seatLimit;
+          $('#machineMaxSpins').textContent = maxSpins;
+          $('#machineStake').textContent = `${stake} credits`;
+
+          const credits = await contract.assetBalances(playerMachineId);
+          $('#machineCredits').textContent = credits.toString();
+
+          // Set config form defaults
+          $('#cfgSeatLimit').value = seatLimit;
+          $('#cfgMaxSpins').value = maxSpins;
+          $('#cfgStakeFactor').value = stakeFactor;
+          $('#cfgStakeMult').value = stakeMult;
+        } else {
+          $('#ownerOnboarding').classList.remove('hidden');
+          $('#ownerDashboard').classList.add('hidden');
+        }
+      } catch (err) {
+        console.warn('loadMachineState error:', err.message);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  PLAYER ACTIONS
+    // ═══════════════════════════════════════════════════════════════
+
+    $('#createPlayerBtn').addEventListener('click', async () => {
+      if (!contractWrite) return toast('Connect wallet first', 'error');
+      await txAction('createPlayerBtn', async () => {
+        const tx = await contractWrite.createPlayer();
+        const receipt = await tx.wait();
+        toast('Player created!', 'success');
+        await loadPlayerState();
+        await updateStats();
+      });
+    });
+
+    $('#depositBtn').addEventListener('click', async () => {
+      if (!contractWrite || playerHumanId === 0n) return toast('No player', 'error');
+      const amount = BigInt($('#creditAmount').value || '0');
+      if (amount <= 0n) return toast('Enter a positive amount', 'error');
+
+      await txAction('depositBtn', async () => {
+        const rate = await contract.exchangeRate();
+        const cost = amount * rate;
+        const tx = await contractWrite.deposit(playerHumanId, amount, { value: cost });
+        await tx.wait();
+        toast(`Deposited ${amount} credits`, 'success');
+        await updateStats();
+      });
+    });
+
+    $('#withdrawCreditsBtn').addEventListener('click', async () => {
+      if (!contractWrite || playerHumanId === 0n) return toast('No player', 'error');
+      const amount = BigInt($('#creditAmount').value || '0');
+      if (amount <= 0n) return toast('Enter a positive amount', 'error');
+
+      await txAction('withdrawCreditsBtn', async () => {
+        const tx = await contractWrite.withdrawCredits(playerHumanId, amount);
+        await tx.wait();
+        toast(`Withdrew ${amount} credits`, 'success');
+        await updateStats();
+      });
+    });
+
+    $('#withdrawEthBtn').addEventListener('click', async () => {
+      if (!contractWrite) return toast('Connect wallet first', 'error');
+      await txAction('withdrawEthBtn', async () => {
+        const tx = await contractWrite.withdraw();
+        await tx.wait();
+        toast('ETH withdrawn!', 'success');
+        await updateStats();
+      });
+    });
+
+    $('#reserveBtn').addEventListener('click', async () => {
+      if (!contractWrite || playerHumanId === 0n) return toast('No player', 'error');
+      const seatId = BigInt($('#reserveSeatId').value || '0');
+      const duration = parseInt($('#reserveDuration').value) || 3;
+      if (seatId <= 0n) return toast('Enter a seat ID', 'error');
+
+      await txAction('reserveBtn', async () => {
+        const tx = await contractWrite.reserve(playerHumanId, seatId, duration);
+        await tx.wait();
+        toast(`Seat #${seatId} reserved!`, 'success');
+        await loadPlayerState();
+      });
+    });
+
+    $('#releaseBtn').addEventListener('click', async () => {
+      if (!contractWrite || playerHumanId === 0n || playerSeatId === 0n)
+        return toast('Not seated', 'error');
+
+      await txAction('releaseBtn', async () => {
+        const tx = await contractWrite.release(playerHumanId, playerSeatId);
+        await tx.wait();
+        toast('Seat released!', 'success');
+        await loadPlayerState();
+      });
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    //  SPIN
+    // ═══════════════════════════════════════════════════════════════
+
+    $('#spinBtn').addEventListener('click', async () => {
+      if (!contractWrite || playerHumanId === 0n || playerSeatId === 0n)
+        return toast('Not seated', 'error');
+
+      const spinCount = parseInt($('#spinCount').value) || 1;
+      if (spinCount < 1 || spinCount > 4) return toast('Spins must be 1-4', 'error');
+
+      $('#spinBtn').disabled = true;
+      $('#spinBtn').textContent = 'SPINNING…';
+
+      try {
+        // Start visual spin immediately
+        slotMachine.startSpin([0, 0, 0, 0, 0]);
+
+        // Send transaction
+        const tx = await contractWrite.gamble(
+          playerHumanId,
+          playerTrackerId,
+          playerSeatId,
+          playerSeatMachineId,
+          spinCount
+        );
+        const receipt = await tx.wait();
+
+        // Parse SpinResult events from receipt
+        const spinResults = [];
+        for (const log of receipt.logs) {
+          try {
+            const parsed = contract.interface.parseLog({ topics: log.topics, data: log.data });
+            if (parsed && parsed.name === 'SpinResult') {
+              spinResults.push({
+                spinIndex: Number(parsed.args.spinIndex),
+                slot1: Number(parsed.args.slot1),
+                slot2: Number(parsed.args.slot2),
+                slot3: Number(parsed.args.slot3),
+                bonus1: Number(parsed.args.bonus1),
+                bonus2: Number(parsed.args.bonus2),
+                reward: parsed.args.reward,
+              });
+            }
+          } catch { /* skip non-matching logs */ }
+        }
+
+        // Parse GambleResult
+        let totalReward = 0n;
+        for (const log of receipt.logs) {
+          try {
+            const parsed = contract.interface.parseLog({ topics: log.topics, data: log.data });
+            if (parsed && parsed.name === 'GambleResult') {
+              totalReward = parsed.args.totalReward;
+            }
+          } catch { /* skip */ }
+        }
+
+        // Use last spin result for canvas display
+        if (spinResults.length > 0) {
+          const last = spinResults[spinResults.length - 1];
+          slotMachine.startSpin([last.slot1, last.slot2, last.slot3, last.bonus1, last.bonus2]);
+
+          slotMachine.onSpinComplete = () => {
+            if (totalReward > 0n) {
+              // Determine which reels contributed to win
+              const winReels = [];
+              if (last.slot1 === last.slot2 && last.slot2 === last.slot3 && last.slot1 !== 0) {
+                winReels.push(0, 1, 2);
+              }
+              if (last.bonus1 !== 0) winReels.push(3);
+              if (last.bonus2 !== 0) winReels.push(4);
+              slotMachine.showWin(winReels, totalReward);
+
+              // Win overlay
+              const overlay = $('#winOverlay');
+              const winText = $('#winText');
+              winText.textContent = `+${totalReward} CREDITS!`;
+              overlay.classList.add('show');
+              setTimeout(() => overlay.classList.remove('show'), 2500);
+            }
+            slotMachine.onSpinComplete = null;
+          };
+        }
+
+        // Add to spin history
+        for (const sr of spinResults) {
+          addSpinHistory(sr, totalReward);
+        }
+
+        await updateStats();
+        toast(totalReward > 0n ? `Won ${totalReward} credits!` : 'No win this time', totalReward > 0n ? 'success' : 'info');
+
+      } catch (err) {
+        toast(`Spin failed: ${err.reason || err.message}`, 'error');
+      } finally {
+        $('#spinBtn').disabled = playerSeatId === 0n;
+        $('#spinBtn').textContent = 'SPIN';
+      }
+    });
+
+    function addSpinHistory(sr, totalReward) {
+      const entry = document.createElement('div');
+      entry.className = 'spin-entry';
+
+      const syms = [sr.slot1, sr.slot2, sr.slot3, sr.bonus1, sr.bonus2]
+        .map(s => SYMBOLS[s]?.emoji || '?').join(' ');
+
+      const isWin = sr.reward > 0n;
+      entry.innerHTML = `
+        <div class="spin-symbols">${syms}</div>
+        <div class="spin-reward ${isWin ? 'win' : 'lose'}">
+          ${isWin ? `+${sr.reward}` : '0'} credits
+          <span style="color: var(--color-text-dim); margin-left: 0.5rem;">
+            [${SYMBOLS[sr.slot1]?.name}, ${SYMBOLS[sr.slot2]?.name}, ${SYMBOLS[sr.slot3]?.name} | ${SYMBOLS[sr.bonus1]?.name}, ${SYMBOLS[sr.bonus2]?.name}]
+          </span>
+        </div>
+      `;
+
+      const container = $('#spinHistory');
+      if (spinHistoryEntries.length === 0) container.innerHTML = '';
+      container.prepend(entry);
+      spinHistoryEntries.unshift(sr);
+
+      // Keep max 50
+      while (spinHistoryEntries.length > 50) {
+        spinHistoryEntries.pop();
+        container.lastChild?.remove();
+      }
+    }
+
+    $('#clearHistoryBtn').addEventListener('click', () => {
+      spinHistoryEntries.length = 0;
+      $('#spinHistory').innerHTML = '<div style="color: var(--color-text-dim); font-size: 0.8125rem; font-style: italic;">No spins yet. Reserve a seat and hit SPIN!</div>';
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    //  OWNER ACTIONS
+    // ═══════════════════════════════════════════════════════════════
+
+    $('#createMachineBtn').addEventListener('click', async () => {
+      if (!contractWrite) return toast('Connect wallet first', 'error');
+      await txAction('createMachineBtn', async () => {
+        const tx = await contractWrite.createMachine();
+        await tx.wait();
+        toast('Machine created!', 'success');
+        await loadMachineState();
+      });
+    });
+
+    $('#machineDepositBtn').addEventListener('click', async () => {
+      if (!contractWrite || playerMachineId === 0n) return toast('No machine', 'error');
+      const amount = BigInt($('#machineDepositAmount').value || '0');
+      if (amount <= 0n) return toast('Enter a positive amount', 'error');
+
+      await txAction('machineDepositBtn', async () => {
+        const rate = await contract.exchangeRate();
+        const cost = amount * rate;
+        const tx = await contractWrite.deposit(playerMachineId, amount, { value: cost });
+        await tx.wait();
+        toast(`Deposited ${amount} credits to machine`, 'success');
+        await loadMachineState();
+      });
+    });
+
+    $('#machineWithdrawBtn').addEventListener('click', async () => {
+      if (!contractWrite || playerMachineId === 0n) return toast('No machine', 'error');
+      const amount = BigInt($('#machineDepositAmount').value || '0');
+      if (amount <= 0n) return toast('Enter a positive amount', 'error');
+
+      await txAction('machineWithdrawBtn', async () => {
+        const tx = await contractWrite.withdrawCredits(playerMachineId, amount);
+        await tx.wait();
+        toast(`Withdrew ${amount} credits from machine`, 'success');
+        await loadMachineState();
+        await updateStats();
+      });
+    });
+
+    $('#configMachineBtn').addEventListener('click', async () => {
+      if (!contractWrite || playerMachineId === 0n) return toast('No machine', 'error');
+
+      const seatLimit = parseInt($('#cfgSeatLimit').value);
+      const maxSpins = parseInt($('#cfgMaxSpins').value);
+      const stakeFactor = parseInt($('#cfgStakeFactor').value);
+      const stakeMult = parseInt($('#cfgStakeMult').value);
+
+      await txAction('configMachineBtn', async () => {
+        const tx = await contractWrite.configMachine(
+          playerMachineId, seatLimit, maxSpins, stakeFactor, stakeMult
+        );
+        await tx.wait();
+        toast('Machine configured!', 'success');
+        await loadMachineState();
+      });
+    });
+
+    $('#rentSeatBtn').addEventListener('click', async () => {
+      if (!contractWrite || playerMachineId === 0n) return toast('No machine', 'error');
+      const duration = parseInt($('#rentDuration').value) || 3;
+
+      await txAction('rentSeatBtn', async () => {
+        const tx = await contractWrite.rent(playerMachineId, duration);
+        const receipt = await tx.wait();
+
+        // Parse SeatRented event
+        let newSeatId = '?';
+        for (const log of receipt.logs) {
+          try {
+            const parsed = contract.interface.parseLog({ topics: log.topics, data: log.data });
+            if (parsed && parsed.name === 'SeatRented') {
+              newSeatId = parsed.args.seatId.toString();
+            }
+          } catch {}
+        }
+
+        toast(`Seat #${newSeatId} rented!`, 'success');
+        await loadMachineState();
+      });
+    });
+
+    $('#returnSeatBtn').addEventListener('click', async () => {
+      if (!contractWrite || playerMachineId === 0n) return toast('No machine', 'error');
+      const seatId = BigInt($('#returnSeatId').value || '0');
+      if (seatId <= 0n) return toast('Enter a seat ID', 'error');
+
+      await txAction('returnSeatBtn', async () => {
+        const tx = await contractWrite.returnSeat(playerMachineId, seatId);
+        await tx.wait();
+        toast(`Seat #${seatId} returned`, 'success');
+        await loadMachineState();
+      });
+    });
+
+    $('#kickBtn').addEventListener('click', async () => {
+      if (!contractWrite || playerHumanId === 0n) return toast('No player', 'error');
+      const victimId = BigInt($('#kickVictimId').value || '0');
+      const seatId = BigInt($('#kickSeatId').value || '0');
+      if (victimId <= 0n || seatId <= 0n) return toast('Enter victim & seat IDs', 'error');
+
+      await txAction('kickBtn', async () => {
+        const tx = await contractWrite.kick(playerHumanId, victimId, seatId);
+        await tx.wait();
+        toast('Player kicked!', 'success');
+        await loadPlayerState();
+      });
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    //  SEAT BROWSER
+    // ═══════════════════════════════════════════════════════════════
+
+    $('#refreshSeatsBtn').addEventListener('click', refreshSeats);
+
+    async function refreshSeats() {
+      if (!contract) return;
+      const grid = $('#seatGrid');
+      grid.innerHTML = '<div style="color: var(--color-text-dim); font-size: 0.8125rem;">Loading…</div>';
+
+      try {
+        // Try to find seats by scanning recent SeatRented events
+        const currentBlock = await readProvider.getBlockNumber();
+        const fromBlock = Math.max(0, currentBlock - 10000);
+
+        const filter = contract.filters.SeatRented();
+        const events = await contract.queryFilter(filter, fromBlock);
+
+        if (events.length === 0) {
+          grid.innerHTML = '<div style="color: var(--color-text-dim); font-size: 0.8125rem; font-style: italic;">No seats found in recent blocks. Machine owners need to rent seats first.</div>';
+          return;
+        }
+
+        // Collect unique seat IDs and check if they still exist
+        const seatIds = new Set();
+        for (const ev of events) {
+          seatIds.add(ev.args.seatId);
+        }
+
+        grid.innerHTML = '';
+
+        for (const seatId of seatIds) {
+          try {
+            const seat = await contract.getAsset(seatId);
+            if (seat.kind !== 0x40n && seat.kind !== 64n) continue; // Not a seat
+
+            const p = seat.payload;
+            const playerId = readUint32LE(p, 24);
+            const machineId = readUint32LE(p, 28);
+            const rentDur = readByte(p, 7);
+            const playerFee = readUint16LE(p, 8);
+            const gracePeriod = readByte(p, 11);
+            const occupied = playerId > 0n;
+
+            const card = document.createElement('div');
+            card.className = 'seat-card';
+            card.innerHTML = `
+              <div class="seat-header">
+                <span class="seat-title">Seat #${seatId}</span>
+                <span class="badge ${occupied ? 'badge-warning' : 'badge-success'}">
+                  ${occupied ? 'Occupied' : 'Available'}
+                </span>
+              </div>
+              <div class="seat-meta">
+                <span>Machine: #${machineId}</span>
+                <span>Rent Duration: ${rentDur}</span>
+                <span>Player Fee: ${playerFee}</span>
+                <span>Grace Period: ${gracePeriod} blocks</span>
+                ${occupied ? `<span>Player: #${playerId}</span>` : ''}
+              </div>
+              ${!occupied ? `<button class="btn btn-sm btn-accent" onclick="document.getElementById('reserveSeatId').value='${seatId}'">Select</button>` : ''}
+            `;
+            grid.appendChild(card);
+          } catch { /* seat might be burned */ }
+        }
+
+        if (grid.children.length === 0) {
+          grid.innerHTML = '<div style="color: var(--color-text-dim); font-size: 0.8125rem; font-style: italic;">No active seats found.</div>';
+        }
+      } catch (err) {
+        grid.innerHTML = `<div style="color: #f87171; font-size: 0.8125rem;">Error: ${err.message}</div>`;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  EVENT LISTENERS
+    // ═══════════════════════════════════════════════════════════════
+
+    function setupEventListeners() {
+      if (!contract) return;
+
+      const eventNames = [
+        'PlayerCreated', 'MachineCreated', 'CreditsDeposited', 'CreditsWithdrawn',
+        'SeatRented', 'SeatReserved', 'GambleResult', 'SpinResult',
+        'SeatReleased', 'PlayerKicked', 'SeatReturned',
+        'ExchangeRateChanged', 'RngContractChanged', 'MachineConfigured'
+      ];
+
+      for (const name of eventNames) {
+        try {
+          contract.on(name, (...args) => {
+            const ev = args[args.length - 1]; // ContractEventPayload is last
+            addEventEntry(name, args.slice(0, -1), ev);
+          });
+        } catch { /* event might not exist */ }
+      }
+    }
+
+    function addEventEntry(name, args, ev) {
+      const container = $('#eventLog');
+      if (eventEntries.length === 0) container.innerHTML = '';
+
+      const entry = document.createElement('div');
+      entry.className = 'ev-entry';
+
+      const argsStr = args.map(a => typeof a === 'bigint' ? a.toString() : String(a)).join(', ');
+      const time = new Date().toLocaleTimeString();
+
+      entry.innerHTML = `
+        <span class="ev-time">${time}</span>
+        <span class="ev-name">${name}</span>
+        <span style="color: var(--color-text-muted);">(${argsStr})</span>
+      `;
+
+      container.prepend(entry);
+      eventEntries.unshift({ name, args, time });
+
+      // Keep max 100
+      while (eventEntries.length > 100) {
+        eventEntries.pop();
+        container.lastChild?.remove();
+      }
+    }
+
+    $('#clearEventsBtn').addEventListener('click', () => {
+      eventEntries.length = 0;
+      $('#eventLog').innerHTML = '<div style="color: var(--color-text-dim); font-size: 0.8125rem; font-style: italic;">Events will appear here once connected.</div>';
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    //  PAYLOAD HELPERS (LITTLE-ENDIAN)
+    // ═══════════════════════════════════════════════════════════════
+
+    function payloadToBytes(payload) {
+      // payload is bytes32 hex string
+      const hex = payload.replace('0x', '');
+      const bytes = new Uint8Array(32);
+      for (let i = 0; i < 32; i++) {
+        bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+      }
+      return bytes;
+    }
+
+    function readByte(payload, offset) {
+      const bytes = payloadToBytes(payload);
+      return bytes[offset];
+    }
+
+    function readHighNibble(payload, offset) {
+      const b = readByte(payload, offset);
+      return (b >> 4) & 0x0F;
+    }
+
+    function readLowNibble(payload, offset) {
+      const b = readByte(payload, offset);
+      return b & 0x0F;
+    }
+
+    function readUint16LE(payload, offset) {
+      const bytes = payloadToBytes(payload);
+      return BigInt(bytes[offset]) | (BigInt(bytes[offset + 1]) << 8n);
+    }
+
+    function readUint32LE(payload, offset) {
+      const bytes = payloadToBytes(payload);
+      return BigInt(bytes[offset])
+        | (BigInt(bytes[offset + 1]) << 8n)
+        | (BigInt(bytes[offset + 2]) << 16n)
+        | (BigInt(bytes[offset + 3]) << 24n);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  GAME MATH HELPERS
+    // ═══════════════════════════════════════════════════════════════
+
+    function calculateStake(factor, multiplier) {
+      // TokenType factor: 10^factor
+      const base = 10 ** factor;
+      return base * multiplier;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  UI HELPERS
+    // ═══════════════════════════════════════════════════════════════
+
+    function setStatus(state, text) {
+      const dot = $('#statusDot');
+      const label = $('#statusText');
+      dot.className = `status-dot ${state}`;
+      label.textContent = text;
+    }
+
+    function toast(msg, type = 'info') {
+      const container = $('#toastContainer');
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.textContent = msg;
+      container.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 300ms'; }, 3000);
+      setTimeout(() => el.remove(), 3400);
+    }
+
+    async function txAction(btnId, action) {
+      const btn = $(`#${btnId}`);
+      const prevText = btn.textContent;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>';
+      try {
+        await action();
+      } catch (err) {
+        const reason = err.reason || err.message || 'Unknown error';
+        toast(reason, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = prevText;
+      }
+    }
+
+  </script>
+</body>
+</html>
