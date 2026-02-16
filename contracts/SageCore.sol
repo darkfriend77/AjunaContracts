@@ -836,23 +836,25 @@ abstract contract SageCore is ReentrancyGuard {
     }
 
     if (transitionId == TRANSITION_SET_FLAGS) {
-      // Interpret data as a set of flag bits to OR into each asset's flags
-      // For simplicity, treat first byte as flag mask
+      // data layout:
+      //   byte 0 = setBits   — bits to turn ON  (OR mask)
+      //   byte 1 = clearBits — bits to turn OFF (AND-NOT mask)  [optional]
+      // The lock bit (bit 0) is always stripped from both masks.
       if (data.length < 1) {
         revert DataTooShort();
       }
-      uint8 mask = uint8(data[0]);
-
-      // Strip reserved bits (lock bit) so transitions can't interfere with engine control
-      mask &= ~FLAG_LOCKED;
+      uint8 setBits = uint8(data[0]) & ~FLAG_LOCKED;
+      uint8 clearBits = data.length >= 2
+        ? uint8(data[1]) & ~FLAG_LOCKED
+        : 0;
 
       uint256 len = assetIds.length;
       for (uint256 i = 0; i < len; ) {
         uint256 id = assetIds[i];
         Asset storage a = _getExistingAsset(id);
 
-        // Apply sanitized mask (reserved bits already stripped)
-        a.flags |= mask;
+        // Set requested bits, then clear requested bits
+        a.flags = (a.flags | setBits) & ~clearBits;
 
         unchecked {
           ++i;
@@ -920,6 +922,22 @@ abstract contract SageCore is ReentrancyGuard {
       revert BatchTooLarge();
     }
 
+    // Check for duplicate asset IDs (O(n²) is acceptable for max 20 assets)
+    for (uint256 i = 0; i < len; ) {
+      uint256 idI = assetIds[i];
+      for (uint256 j = i + 1; j < len; ) {
+        if (idI == assetIds[j]) {
+          revert DuplicateAssetId();
+        }
+        unchecked {
+          ++j;
+        }
+      }
+      unchecked {
+        ++i;
+      }
+    }
+
     // Validate receiver's capacity before making any changes
     Inventory storage toInv = inventories[to];
     if (toInv.slots.length + len > _getMaxSlots(to)) {
@@ -982,6 +1000,22 @@ abstract contract SageCore is ReentrancyGuard {
       revert BatchTooLarge();
     }
 
+    // Check for duplicate asset IDs (O(n²) is acceptable for max 20 assets)
+    for (uint256 i = 0; i < len; ) {
+      uint256 idI = assetIds[i];
+      for (uint256 j = i + 1; j < len; ) {
+        if (idI == assetIds[j]) {
+          revert DuplicateAssetId();
+        }
+        unchecked {
+          ++j;
+        }
+      }
+      unchecked {
+        ++i;
+      }
+    }
+
     // First pass: validate all assets
     for (uint256 i = 0; i < len; ) {
       Asset storage a = _getExistingAsset(assetIds[i]);
@@ -1039,13 +1073,11 @@ abstract contract SageCore is ReentrancyGuard {
   // === INVENTORY MANAGEMENT ===
 
   /**
-   * @notice Get maximum inventory slots for an account based on storage tier
-   * @param account The account to check
-   * @return Maximum slots available
+   * @notice Get the capacity for a given storage tier
+   * @param tier The storage tier to query
+   * @return Capacity (number of inventory slots) for that tier
    */
-  function _getMaxSlots(address account) internal view returns (uint16) {
-    StorageTier tier = userContext[account].tier;
-
+  function _tierCapacity(StorageTier tier) internal pure returns (uint16) {
     if (tier == StorageTier.Tier25) {
       return 25;
     } else if (tier == StorageTier.Tier50) {
@@ -1059,23 +1091,23 @@ abstract contract SageCore is ReentrancyGuard {
   }
 
   /**
-   * @notice Get storage tier capacity
+   * @notice Get maximum inventory slots for an account based on storage tier
+   * @param account The account to check
+   * @return Maximum slots available
+   */
+  function _getMaxSlots(address account) internal view returns (uint16) {
+    return _tierCapacity(userContext[account].tier);
+  }
+
+  /**
+   * @notice Get storage tier capacity (external view)
    * @param tier The storage tier to check
    * @return Capacity for that tier
    */
   function getStorageTierCapacity(
     StorageTier tier
   ) external pure returns (uint16) {
-    if (tier == StorageTier.Tier25) {
-      return 25;
-    } else if (tier == StorageTier.Tier50) {
-      return 50;
-    } else if (tier == StorageTier.Tier75) {
-      return 75;
-    } else {
-      // Tier100
-      return 100;
-    }
+    return _tierCapacity(tier);
   }
 
   /**
@@ -1366,6 +1398,9 @@ abstract contract SageCore is ReentrancyGuard {
   /**
    * @notice Cancel a listing and unlock the asset
    * @param assetId The ID of the asset to cancel listing for
+   * @dev Intentionally does NOT check marketplaceEnabled — users must always
+   *      be able to recover (unlock) their assets even if the marketplace
+   *      has been disabled by the owner.
    */
   function cancelListing(uint256 assetId) external nonReentrant {
     Listing storage listing = listings[assetId];

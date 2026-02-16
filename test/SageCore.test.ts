@@ -276,6 +276,12 @@ describe("SageCore (via TestGame)", function () {
         game.connect(alice).batchTransfer([1], ethers.ZeroAddress)
       ).to.be.revertedWithCustomError(game, "InvalidRecipient");
     });
+
+    it("should revert batch transfer with duplicate asset IDs", async function () {
+      await expect(
+        game.connect(alice).batchTransfer([1, 1], bob.address)
+      ).to.be.revertedWithCustomError(game, "DuplicateAssetId");
+    });
   });
 
   // ═══════════════════════════════════════════
@@ -328,6 +334,13 @@ describe("SageCore (via TestGame)", function () {
       await expect(
         game.connect(alice).batchBurn([])
       ).to.be.revertedWithCustomError(game, "EmptyBatch");
+    });
+
+    it("should revert batch burn with duplicate asset IDs", async function () {
+      await game.mintTo(alice.address, 1, 0, 0, ZERO_BYTES32);
+      await expect(
+        game.connect(alice).batchBurn([1, 1])
+      ).to.be.revertedWithCustomError(game, "DuplicateAssetId");
     });
 
     it("should game burn via internal _burnAsset (owner only)", async function () {
@@ -408,6 +421,13 @@ describe("SageCore (via TestGame)", function () {
   describe("Storage Tiers", function () {
     it("should start at Tier25", async function () {
       expect(await game.getStorageTierCapacity(0)).to.equal(25);
+    });
+
+    it("should report correct capacity for all tiers", async function () {
+      expect(await game.getStorageTierCapacity(0)).to.equal(25);
+      expect(await game.getStorageTierCapacity(1)).to.equal(50);
+      expect(await game.getStorageTierCapacity(2)).to.equal(75);
+      expect(await game.getStorageTierCapacity(3)).to.equal(100);
     });
 
     it("should upgrade from Tier25 to Tier50", async function () {
@@ -585,6 +605,30 @@ describe("SageCore (via TestGame)", function () {
         await expect(
           game.connect(alice).executeTransition(3, [1], "0x")
         ).to.be.revertedWithCustomError(game, "DataTooShort");
+      });
+
+      it("should clear flags using second data byte", async function () {
+        // First set bit 1 (0x02) and bit 2 (0x04)
+        await game.connect(alice).executeTransition(3, [1], "0x06");
+        let asset = await game.getAsset(1);
+        expect(Number(asset.flags) & 0x06).to.equal(0x06);
+
+        // Now clear bit 1 (0x02): setBits=0x00, clearBits=0x02
+        await game.connect(alice).executeTransition(3, [1], "0x0002");
+        asset = await game.getAsset(1);
+        expect(Number(asset.flags) & 0x02).to.equal(0);
+        expect(Number(asset.flags) & 0x04).to.equal(0x04); // bit 2 still set
+      });
+
+      it("should strip lock bit from clear mask too", async function () {
+        // Lock the asset via lockAsset, then try clearing lock via SET_FLAGS
+        await game.connect(alice).lockAsset(1);
+        // Need to use a transition that allows locked assets — configure NOOP-like
+        await game.configureTransition(3, true, false, true, 5);
+        // clearBits=0x01 (lock bit) should be stripped
+        await game.connect(alice).executeTransition(3, [1], "0x0001");
+        // Asset should still be locked
+        expect(await game.isLocked(1)).to.be.true;
       });
     });
 
