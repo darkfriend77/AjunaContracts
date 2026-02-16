@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "U+DXlxqr1ik=",
+  "success": true,
+  "projectFilePath": "/home/darkfriend/projects/antigravity/AjunaContracts/archive/Ajuna.SAGE.Game.CasinoJam/Ajuna.SAGE.Game.CasinoJam.csproj",
+  "expectedPackageFiles": [
+    "/home/darkfriend/.nuget/packages/microsoft.netcore.app.ref/8.0.15/microsoft.netcore.app.ref.8.0.15.nupkg.sha512",
+    "/home/darkfriend/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.15/microsoft.aspnetcore.app.ref.8.0.15.nupkg.sha512"
+  ],
+  "logs": []
+}
