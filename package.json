@@ -1,0 +1,42 @@
+{
+  "name": "insecure-randomness",
+  "version": "1.0.0",
+  "description": "Low-influence on-chain randomness for EVM smart contracts — a Solidity port of Substrate's pallet_insecure_randomness_collective_flip",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "test:local": "npx hardhat test --network local",
+    "deploy": "npx hardhat run scripts/deploy.ts --network localhost",
+    "deploy:local": "npx hardhat run scripts/deploy.ts --network local",
+    "clean": "npx hardhat clean"
+  },
+  "keywords": [
+    "randomness",
+    "solidity",
+    "substrate",
+    "polkadot",
+    "pallet-revive",
+    "blockhash",
+    "evm"
+  ],
+  "author": "Ajuna Network",
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.5",
+    "@parity/hardhat-polkadot": "^0.2.7",
+    "@parity/resolc": "^0.2.0",
+    "@typechain/ethers-v6": "^0.5.1",
+    "@typechain/hardhat": "^9.1.0",
+    "@types/chai": "^5.2.3",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.2.0",
+    "chai": "^4.3.10",
+    "ethers": "^6.16.0",
+    "hardhat": "^2.28.4",
+    "ts-node": "^10.9.2",
+    "typechain": "^8.3.2",
+    "typescript": "^5.9.3"
+  }
+}

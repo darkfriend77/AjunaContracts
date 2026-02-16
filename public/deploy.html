@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en" style="--color-accent: #6290AF">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deploy InsecureRandomness</title>
+  <style>
+    :root {
+      --color-bg: #09090b;
+      --color-surface: #18181b;
+      --color-border: #27272a;
+      --color-accent: #6290AF;
+      --color-text-primary: #f4f4f5;
+      --color-text-secondary: #a1a1aa;
+      --color-text-muted: #71717a;
+      --font-mono: "JetBrains Mono", "Fira Code", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--color-bg); color: var(--color-text-primary);
+      font-family: system-ui, sans-serif; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+    .card {
+      border-radius: 0.5rem; border: 1px solid var(--color-border);
+      background: rgb(24 24 27 / 0.5); padding: 2rem;
+      max-width: 600px; width: 100%;
+    }
+    h1 { font-size: 1.25rem; font-weight: 700; color: var(--color-accent); margin-bottom: 0.25rem; }
+    .subtitle { font-size: 0.8125rem; color: var(--color-text-muted); margin-bottom: 1.5rem; }
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block; font-size: 0.6875rem; color: var(--color-text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 0.25rem;
+    }
+    .field select, .field input {
+      width: 100%; border-radius: 0.5rem; border: 1px solid rgba(63,63,70,0.6);
+      background: rgba(24,24,27,0.8); padding: 0.5rem 0.75rem;
+      font-size: 0.875rem; color: var(--color-text-primary); font-family: var(--font-mono);
+    }
+    .field select:focus, .field input:focus {
+      outline: none;
+      border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 30%, transparent);
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      border-radius: 0.375rem; border: none; padding: 0.625rem 1.5rem;
+      font-size: 0.9375rem; font-weight: 600; cursor: pointer;
+      transition: filter 150ms; width: 100%;
+    }
+    .btn-accent { background: var(--color-accent); color: #fff; }
+    .btn-accent:hover { filter: brightness(1.15); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .status {
+      margin-top: 1rem; border-radius: 0.375rem; background: var(--color-surface);
+      border: 1px solid var(--color-border); padding: 0.75rem;
+      font-size: 0.8125rem; font-family: var(--font-mono);
+      white-space: pre-wrap; word-break: break-all; display: none;
+    }
+    .status.visible { display: block; }
+    .status.success { border-color: rgb(22 101 52 / 0.5); color: #4ade80; }
+    .status.error   { border-color: rgb(153 27 27 / 0.5); color: #f87171; }
+    .status.info    { color: #d4d4d8; }
+    .spinner {
+      display: inline-block; width: 1rem; height: 1rem;
+      border: 2px solid #52525b; border-top-color: #fff;
+      border-radius: 9999px; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .step { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.8125rem; }
+    .step-dot {
+      width: 0.5rem; height: 0.5rem; border-radius: 9999px; flex-shrink: 0;
+    }
+    .step-dot.done { background: #4ade80; }
+    .step-dot.active { background: #facc15; animation: pulse 1.5s ease-in-out infinite; }
+    .step-dot.pending { background: #3f3f46; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .addr-link { color: var(--color-accent); text-decoration: none; }
+    .addr-link:hover { text-decoration: underline; }
+    .networks-info { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Deploy InsecureRandomness</h1>
+    <p class="subtitle">Connect your wallet — no private key needed</p>
+
+    <div class="field">
+      <label>Target Network</label>
+      <select id="networkSelect">
+        <option value="westend" selected>Westend Asset Hub (Testnet) — Chain ID 420420417</option>
+        <option value="polkadot">Polkadot Asset Hub (Mainnet) — Chain ID 420420421</option>
+        <option value="custom">Custom RPC…</option>
+      </select>
+    </div>
+
+    <div class="field" id="customRpcField" style="display: none;">
+      <label>Custom RPC URL</label>
+      <input id="customRpc" type="text" placeholder="https://..." />
+    </div>
+
+    <div id="steps" style="display: none; margin-bottom: 1rem;">
+      <div class="step"><span class="step-dot pending" id="dot1"></span> <span id="step1">Connect wallet</span></div>
+      <div class="step"><span class="step-dot pending" id="dot2"></span> <span id="step2">Send deploy transaction</span></div>
+      <div class="step"><span class="step-dot pending" id="dot3"></span> <span id="step3">Wait for confirmation</span></div>
+    </div>
+
+    <button class="btn btn-accent" id="deployBtn" onclick="deploy()">
+      Connect Wallet & Deploy
+    </button>
+
+    <div class="status" id="statusBox"></div>
+
+    <p class="networks-info">
+      Make sure your wallet (MetaMask, Talisman, SubWallet, etc.) is configured with the correct Asset Hub RPC.
+    </p>
+  </div>
+
+  <script type="module">
+    import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.min.js";
+
+    // Contract ABI and bytecode — extracted from compiled artifacts
+    const ABI = [
+      "constructor()",
+      "function RANDOM_MATERIAL_LEN() view returns (uint256)",
+      "function random(bytes subject) view returns (bytes32 seed, uint256 blockOffset)",
+      "function randomValue(bytes subject) view returns (bytes32)",
+      "function randomInRange(bytes subject, uint256 max) view returns (uint256)"
+    ];
+
+    // PLACEHOLDER — will be filled from artifacts
+    let BYTECODE = null;
+
+    const NETWORKS = {
+      westend: {
+        chainId: 420420417,
+        rpc: "https://services.polkadothub-rpc.com/testnet",
+        name: "Westend Asset Hub",
+      },
+      polkadot: {
+        chainId: 420420421,
+        rpc: "https://services.polkadothub-rpc.com/mainnet",
+        name: "Polkadot Asset Hub",
+      },
+    };
+
+    document.getElementById("networkSelect").addEventListener("change", (e) => {
+      document.getElementById("customRpcField").style.display =
+        e.target.value === "custom" ? "" : "none";
+    });
+
+    window.deploy = async function () {
+      const btn = document.getElementById("deployBtn");
+      const statusBox = document.getElementById("statusBox");
+      const stepsEl = document.getElementById("steps");
+
+      // Load bytecode from artifacts if not loaded
+      if (!BYTECODE) {
+        try {
+          const resp = await fetch("../artifacts/contracts/InsecureRandomness.sol/InsecureRandomness.json");
+          const artifact = await resp.json();
+          BYTECODE = artifact.bytecode;
+        } catch {
+          showStatus("error",
+            "Could not load contract bytecode.\n\n" +
+            "Make sure you:\n" +
+            "1. Run 'npm run compile' first\n" +
+            "2. Serve this page from the project root (not just /public)\n\n" +
+            "Or paste the bytecode manually into the deploy page."
+          );
+          return;
+        }
+      }
+
+      if (!window.ethereum) {
+        showStatus("error", "No wallet detected!\n\nInstall MetaMask, Talisman, or SubWallet.");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Deploying…';
+      stepsEl.style.display = "";
+
+      try {
+        // Step 1: Connect wallet
+        setStep(1, "active");
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const address = await signer.getAddress();
+        setStep(1, "done", `Connected: ${address.slice(0, 6)}…${address.slice(-4)}`);
+
+        // Check network
+        const network = await provider.getNetwork();
+        const selected = document.getElementById("networkSelect").value;
+        if (selected !== "custom") {
+          const expected = NETWORKS[selected];
+          if (Number(network.chainId) !== expected.chainId) {
+            showStatus("error",
+              `Wrong network!\n\nExpected: ${expected.name} (chain ID ${expected.chainId})\n` +
+              `Connected: chain ID ${network.chainId}\n\n` +
+              `Please switch your wallet to the correct network.`
+            );
+            resetBtn();
+            return;
+          }
+        }
+
+        // Step 2: Deploy
+        setStep(2, "active");
+        const factory = new ethers.ContractFactory(ABI, BYTECODE, signer);
+        const contract = await factory.deploy();
+        const deployTx = contract.deploymentTransaction();
+        setStep(2, "done", `Tx sent: ${deployTx.hash.slice(0, 10)}…`);
+
+        // Step 3: Wait for confirmation
+        setStep(3, "active");
+        await contract.waitForDeployment();
+        const deployedAddr = await contract.getAddress();
+        setStep(3, "done", "Confirmed!");
+
+        // Verify
+        const matLen = await contract.RANDOM_MATERIAL_LEN();
+
+        showStatus("success",
+          `Contract deployed successfully!\n\n` +
+          `Address: ${deployedAddr}\n` +
+          `Tx hash: ${deployTx.hash}\n` +
+          `RANDOM_MATERIAL_LEN: ${matLen}\n` +
+          `Network: chain ID ${network.chainId}\n\n` +
+          `You can now use this address in the tester UI.`
+        );
+
+      } catch (err) {
+        if (err.code === 4001 || err.code === "ACTION_REJECTED") {
+          showStatus("error", "Transaction rejected by user.");
+        } else {
+          showStatus("error", `Deploy failed:\n${err.message}`);
+        }
+      } finally {
+        resetBtn();
+      }
+    };
+
+    function setStep(n, state, text) {
+      const dot = document.getElementById(`dot${n}`);
+      const step = document.getElementById(`step${n}`);
+      dot.className = `step-dot ${state}`;
+      if (text) step.textContent = text;
+    }
+
+    function showStatus(type, msg) {
+      const box = document.getElementById("statusBox");
+      box.className = `status visible ${type}`;
+      box.textContent = msg;
+    }
+
+    function resetBtn() {
+      const btn = document.getElementById("deployBtn");
+      btn.disabled = false;
+      btn.textContent = "Connect Wallet & Deploy";
+    }
+  </script>
+</body>
+</html>

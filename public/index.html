@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en" style="--color-accent: #6290AF">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InsecureRandomness — Tester</title>
+  <style>
+    /* ── Polka-Xplo Base Theme ── */
+    :root {
+      --color-bg: #09090b;
+      --color-surface: #18181b;
+      --color-border: #27272a;
+      --color-accent: #6290AF;
+      --color-text-primary: #f4f4f5;
+      --color-text-secondary: #a1a1aa;
+      --color-text-muted: #71717a;
+      --color-text-dim: #52525b;
+      --font-mono: "JetBrains Mono", "Fira Code", monospace;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text-primary);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--color-surface); }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 9999px; }
+
+    /* ── Header ── */
+    .header {
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .header-banner {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, #6290AF18 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .header-inner {
+      position: relative;
+      max-width: 80rem;
+      margin: 0 auto;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.5rem;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .header-logo svg {
+      width: 20px;
+      height: 20px;
+      color: var(--color-accent);
+    }
+    .header-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-accent);
+    }
+    .header-subtitle {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+
+    /* ── Main ── */
+    .main {
+      flex: 1;
+      max-width: 80rem;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ── Connection Bar ── */
+    .connect-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .field-grow { flex: 1; min-width: 200px; }
+    .field label {
+      font-size: 0.6875rem;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+    .field input, .field select {
+      width: 100%;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(63,63,70,0.6);
+      background: rgba(24,24,27,0.8);
+      padding: 0.375rem 0.75rem;
+      font-size: 0.875rem;
+      color: var(--color-text-primary);
+      font-family: var(--font-mono);
+      transition: border-color 150ms, box-shadow 150ms;
+    }
+    .field select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2371717a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.6rem center;
+      padding-right: 2rem;
+      font-family: system-ui, sans-serif;
+    }
+    .field input::placeholder {
+      color: var(--color-text-muted);
+      font-family: system-ui, sans-serif;
+    }
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 30%, transparent);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      border-radius: 0.375rem;
+      border: 1px solid var(--color-border);
+      background: #27272a;
+      padding: 0.375rem 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      transition: background-color 150ms, color 150ms;
+      white-space: nowrap;
+    }
+    .btn:hover {
+      background: #3f3f46;
+      color: #e4e4e7;
+    }
+    .btn-accent {
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+      color: #fff;
+    }
+    .btn-accent:hover {
+      filter: brightness(1.15);
+      color: #fff;
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* ── Status dot ── */
+    .status-dot {
+      display: inline-block;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 9999px;
+    }
+    .status-dot.connected { background: #4ade80; }
+    .status-dot.disconnected { background: #f87171; }
+    .status-dot.connecting {
+      background: #facc15;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    @media (min-width: 640px) {
+      .stats-bar { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .stats-bar { grid-template-columns: repeat(5, 1fr); }
+    }
+
+    .stat-card {
+      border-radius: 0.5rem;
+      border: 1px solid var(--color-border);
+      background: rgb(24 24 27 / 0.5);
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .stat-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.5rem;
+      background: #27272a;
+      flex-shrink: 0;
+    }
+    .stat-icon svg {
+      width: 18px;
+      height: 18px;
+      color: var(--color-text-muted);
+    }
+    .stat-info {
+      min-width: 0;
+    }
+    .stat-label {
+      font-size: 0.6875rem;
+      color: var(--color-text-muted);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stat-value {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      font-variant-numeric: tabular-nums;
+      font-family: var(--font-mono);
+    }
+
+    /* ── Card ── */
+    .card {
+      border-radius: 0.5rem;
+      border: 1px solid var(--color-border);
+      background: rgb(24 24 27 / 0.5);
+      padding: 1.25rem;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 0.25rem;
+      border-bottom: 1px solid var(--color-border);
+      margin-bottom: 1rem;
+    }
+    .tab {
+      padding: 0.625rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      color: var(--color-text-muted);
+      transition: color 150ms;
+    }
+    .tab:hover { color: #d4d4d8; }
+    .tab.active {
+      color: var(--color-text-primary);
+      border-bottom-color: var(--color-accent);
+    }
+
+    /* ── Function panels ── */
+    .fn-panel { display: none; }
+    .fn-panel.active { display: block; }
+
+    .fn-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: flex-end;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Result area ── */
+    .result-box {
+      border-radius: 0.375rem;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      padding: 0.75rem;
+      font-size: 0.75rem;
+      color: #d4d4d8;
+      font-family: var(--font-mono);
+      white-space: pre-wrap;
+      word-break: break-all;
+      overflow-x: auto;
+      min-height: 3rem;
+      position: relative;
+    }
+    .result-box.empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-dim);
+      font-family: system-ui, sans-serif;
+      font-style: italic;
+    }
+
+    /* ── History table ── */
+    .history-section {
+      margin-top: 1rem;
+    }
+    .history-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .history-table {
+      width: 100%;
+      font-size: 0.875rem;
+      border-collapse: collapse;
+    }
+    .history-table th {
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--color-text-muted);
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 0.5rem;
+      padding-right: 1rem;
+    }
+    .history-table td {
+      padding: 0.625rem 1rem 0.625rem 0;
+      color: #d4d4d8;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      max-width: 400px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .history-table tr {
+      border-bottom: 1px solid rgb(39 39 42 / 0.5);
+      transition: background-color 150ms;
+    }
+    .history-table tbody tr:hover {
+      background-color: rgb(39 39 42 / 0.3);
+    }
+    .history-table .col-fn {
+      font-family: system-ui, sans-serif;
+    }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 0.375rem;
+      padding: 0.125rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .badge-info {
+      background: #172554;
+      color: #60a5fa;
+      border: 1px solid rgb(30 64 175 / 0.5);
+    }
+    .badge-success {
+      background: #052e16;
+      color: #4ade80;
+      border: 1px solid rgb(22 101 52 / 0.5);
+    }
+    .badge-error {
+      background: #450a0a;
+      color: #f87171;
+      border: 1px solid rgb(153 27 27 / 0.5);
+    }
+    .badge-warning {
+      background: #422006;
+      color: #facc15;
+      border: 1px solid rgb(133 77 14 / 0.5);
+    }
+    .badge-neutral {
+      background: rgb(39 39 42 / 0.4);
+      color: #a1a1aa;
+      border: 1px solid rgb(63 63 70 / 0.4);
+    }
+    .badge-purple {
+      background: #3b0764;
+      color: #c084fc;
+      border: 1px solid rgb(107 33 168 / 0.5);
+    }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      z-index: 100;
+    }
+    .toast {
+      border-radius: 0.5rem;
+      border: 1px solid rgb(133 77 14 / 0.5);
+      background: rgb(69 26 3 / 0.85);
+      backdrop-filter: blur(8px);
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      color: #fde047;
+      max-width: 360px;
+      animation: slideIn 200ms ease-out;
+    }
+    .toast.toast-error {
+      border-color: rgb(153 27 27 / 0.5);
+      background: rgb(69 10 10 / 0.85);
+      color: #fca5a5;
+    }
+    .toast.toast-success {
+      border-color: rgb(22 101 52 / 0.5);
+      background: rgb(5 46 22 / 0.85);
+      color: #86efac;
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid #52525b;
+      border-top-color: var(--color-accent);
+      border-radius: 9999px;
+      animation: spin 1s linear infinite;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      border-top: 1px solid var(--color-border);
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+    .footer a {
+      color: var(--color-text-dim);
+      text-decoration: none;
+      transition: color 150ms;
+    }
+    .footer a:hover {
+      color: #e4e4e7;
+    }
+
+    /* ── Animations ── */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(0.5rem); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Helpers ── */
+    .mono { font-family: var(--font-mono); }
+    .accent { color: var(--color-accent); }
+    .text-muted { color: var(--color-text-muted); }
+    .text-secondary { color: var(--color-text-secondary); }
+    .mt-1 { margin-top: 0.25rem; }
+    .gap-sm { gap: 0.5rem; }
+    .flex-center { display: flex; align-items: center; }
+    .copy-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 0.25rem;
+      padding: 0.25rem 0.375rem;
+      cursor: pointer;
+      color: var(--color-text-muted);
+      font-size: 0.6875rem;
+      transition: color 150ms, background-color 150ms;
+    }
+    .copy-btn:hover {
+      background: #3f3f46;
+      color: #e4e4e7;
+    }
+
+    /* ── Buffer fill bar ── */
+    .buffer-card {
+      border-radius: 0.5rem;
+      border: 1px solid var(--color-border);
+      background: rgb(24 24 27 / 0.5);
+      padding: 1.25rem;
+    }
+    .buffer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .buffer-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+    .buffer-stats {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .buffer-count {
+      font-size: 0.875rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+    .buffer-count .filled { color: #4ade80; }
+    .buffer-count .total  { color: var(--color-text-muted); }
+    .buffer-pct {
+      font-size: 0.75rem;
+      font-weight: 500;
+      font-family: var(--font-mono);
+    }
+    .buffer-pct.full    { color: #4ade80; }
+    .buffer-pct.partial { color: #facc15; }
+    .buffer-pct.low     { color: #f87171; }
+
+    .progress-track {
+      width: 100%;
+      height: 1.25rem;
+      border-radius: 0.375rem;
+      background: #27272a;
+      border: 1px solid var(--color-border);
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 0.75rem;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 0.375rem 0 0 0.375rem;
+      background: linear-gradient(90deg, var(--color-accent), #c084fc);
+      transition: width 300ms ease-out;
+      min-width: 0;
+    }
+    .progress-fill.full {
+      border-radius: 0.375rem;
+      background: linear-gradient(90deg, #4ade80, #22d3ee);
+    }
+    .progress-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+      font-family: var(--font-mono);
+      pointer-events: none;
+    }
+
+    .buffer-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .mine-group {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+    .mine-group input {
+      width: 4rem;
+      border-radius: 0.375rem;
+      border: 1px solid rgba(63,63,70,0.6);
+      background: rgba(24,24,27,0.8);
+      padding: 0.3rem 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--color-text-primary);
+      font-family: var(--font-mono);
+      text-align: center;
+    }
+    .mine-group input:focus {
+      outline: none;
+      border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 30%, transparent);
+    }
+    .buffer-hint {
+      font-size: 0.6875rem;
+      color: var(--color-text-dim);
+      margin-top: 0.25rem;
+    }
+    .fill-remaining-btn {
+      font-size: 0.75rem;
+    }
+
+    /* ── Two-col layout ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    @media (min-width: 1024px) {
+      .grid-2 { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ Header ═══ -->
+  <header class="header">
+    <div class="header-banner" aria-hidden="true"></div>
+    <div class="header-inner">
+      <div class="header-brand">
+        <div class="header-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19.5 12c0-4.136-3.364-7.5-7.5-7.5S4.5 7.864 4.5 12s3.364 7.5 7.5 7.5"/>
+            <path d="M12 4.5v3M12 16.5v3M4.5 12h3M16.5 12h3"/>
+            <circle cx="17" cy="17" r="3"/>
+            <path d="M15 19l4-4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="header-title">InsecureRandomness</div>
+          <div class="header-subtitle">Contract Tester</div>
+        </div>
+      </div>
+      <div class="flex-center gap-sm">
+        <span class="status-dot disconnected" id="statusDot"></span>
+        <span class="text-muted" style="font-size: 0.75rem" id="statusText">Disconnected</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ Main ═══ -->
+  <main class="main">
+
+    <!-- ── Connection ── -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Connection</h2>
+      </div>
+      <div class="connect-bar">
+        <div class="field" style="min-width: 200px;">
+          <label for="networkSelect">Network</label>
+          <select id="networkSelect" onchange="onNetworkChange()">
+            <option value="mainnet">Polkadot Hub Mainnet (DOT)</option>
+            <option value="testnet">Polkadot Hub Testnet (PAS)</option>
+            <option value="localhost">Localhost (Hardhat)</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="field field-grow">
+          <label for="rpcUrl">RPC URL</label>
+          <input id="rpcUrl" type="text" value="https://eth-rpc.polkadot.io/" placeholder="https://eth-rpc.polkadot.io/" />
+        </div>
+        <div class="field field-grow">
+          <label for="contractAddr">Contract Address</label>
+          <input id="contractAddr" type="text" value="0x95A64688697D0193FE8Deec53F0c9bFFD876e595" placeholder="0x…" />
+        </div>
+        <button class="btn btn-accent" id="connectBtn" onclick="connectToContract()">Connect</button>
+      </div>
+      <div id="networkInfo" style="margin-top: 0.5rem; font-size: 0.6875rem; color: var(--color-text-dim); display: flex; gap: 1rem; flex-wrap: wrap;">
+        <span>Chain ID: <strong id="netChainId" style="color: var(--color-text-muted);">420420419</strong></span>
+        <span>Currency: <strong id="netCurrency" style="color: var(--color-text-muted);">DOT</strong></span>
+        <span>Explorer: <a id="netExplorer" href="https://blockscout.polkadot.io/" target="_blank" rel="noopener" style="color: var(--color-accent); text-decoration: none;">blockscout.polkadot.io</a></span>
+      </div>
+    </div>
+
+    <!-- ── Stats ── -->
+    <div class="stats-bar" id="statsBar" style="display: none;">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M9 12h6M12 9v6"/>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Block Number</div>
+          <div class="stat-value" id="statBlock">—</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Material Len</div>
+          <div class="stat-value" id="statMaterial">—</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Chain ID</div>
+          <div class="stat-value" id="statChain">—</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Network</div>
+          <div class="stat-value" id="statNetwork" style="font-family: system-ui; font-size: 0.8125rem;">—</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Calls Made</div>
+          <div class="stat-value" id="statCalls">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Buffer Fill ── -->
+    <div class="buffer-card" id="bufferCard" style="display: none;">
+      <div class="buffer-header">
+        <div class="buffer-title">Ring Buffer Fill</div>
+        <div class="buffer-stats">
+          <span class="buffer-count"><span class="filled" id="bufFilled">0</span><span class="total"> / 81 blocks</span></span>
+          <span class="buffer-pct low" id="bufPct">0%</span>
+        </div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="bufBar" style="width: 0%"></div>
+        <div class="progress-label" id="bufBarLabel">0 / 81</div>
+      </div>
+      <div class="buffer-actions">
+        <div class="mine-group">
+          <button class="btn" onclick="mineBlocks()" id="btnMine">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12h6M12 9v6"/></svg>
+            Mine Blocks
+          </button>
+          <input id="mineCount" type="number" min="1" value="1" />
+        </div>
+        <button class="btn fill-remaining-btn" onclick="fillRemaining()" id="btnFill">Fill to 81</button>
+        <span class="buffer-hint" id="bufHint">Mine blocks to populate the ring buffer for full entropy</span>
+      </div>
+    </div>
+
+    <!-- ── Function Panel ── -->
+    <div class="grid-2" id="fnSection" style="display: none;">
+
+      <!-- Left: Functions -->
+      <div class="card">
+        <div class="tabs">
+          <button class="tab active" data-tab="random" onclick="switchTab('random')">random()</button>
+          <button class="tab" data-tab="randomValue" onclick="switchTab('randomValue')">randomValue()</button>
+          <button class="tab" data-tab="randomInRange" onclick="switchTab('randomInRange')">randomInRange()</button>
+        </div>
+
+        <!-- random() -->
+        <div class="fn-panel active" id="panel-random">
+          <p class="text-secondary" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">
+            Returns a mixed pseudo-random <code class="mono accent">bytes32</code> seed and the oldest contributing block number.
+          </p>
+          <div class="fn-form">
+            <div class="field field-grow">
+              <label for="randomSubject">Subject</label>
+              <input id="randomSubject" type="text" placeholder="e.g. lottery, nft-mint" />
+            </div>
+            <button class="btn btn-accent" onclick="callRandom()" id="btnRandom">
+              Execute
+            </button>
+          </div>
+          <div class="result-box empty" id="result-random">
+            Press Execute to generate randomness
+          </div>
+        </div>
+
+        <!-- randomValue() -->
+        <div class="fn-panel" id="panel-randomValue">
+          <p class="text-secondary" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">
+            Convenience wrapper — returns just the random <code class="mono accent">bytes32</code> hash.
+          </p>
+          <div class="fn-form">
+            <div class="field field-grow">
+              <label for="valueSubject">Subject</label>
+              <input id="valueSubject" type="text" placeholder="e.g. dice-roll" />
+            </div>
+            <button class="btn btn-accent" onclick="callRandomValue()" id="btnValue">
+              Execute
+            </button>
+          </div>
+          <div class="result-box empty" id="result-randomValue">
+            Press Execute to generate randomness
+          </div>
+        </div>
+
+        <!-- randomInRange() -->
+        <div class="fn-panel" id="panel-randomInRange">
+          <p class="text-secondary" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">
+            Returns a random <code class="mono accent">uint256</code> in <code class="mono">[0, max)</code>. Reverts if <code class="mono">max == 0</code>.
+          </p>
+          <div class="fn-form">
+            <div class="field field-grow">
+              <label for="rangeSubject">Subject</label>
+              <input id="rangeSubject" type="text" placeholder="e.g. winner-pick" />
+            </div>
+            <div class="field" style="min-width: 120px;">
+              <label for="rangeMax">Max (exclusive)</label>
+              <input id="rangeMax" type="number" min="1" value="100" placeholder="100" />
+            </div>
+            <button class="btn btn-accent" onclick="callRandomInRange()" id="btnRange">
+              Execute
+            </button>
+          </div>
+          <div class="result-box empty" id="result-randomInRange">
+            Press Execute to generate randomness
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: History -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Call History</h2>
+          <button class="btn" onclick="clearHistory()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Clear</button>
+        </div>
+        <div id="historyEmpty" class="result-box empty" style="min-height: 200px;">
+          No calls yet
+        </div>
+        <div id="historyTable" style="display: none; overflow-x: auto;">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Function</th>
+                <th>Subject</th>
+                <th>Result</th>
+                <th>Block</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══ Footer ═══ -->
+  <footer class="footer">
+    InsecureRandomness &mdash; Ajuna Network &middot;
+    <a href="https://ajuna.io" target="_blank" rel="noopener">ajuna.io</a>
+    &middot;
+    <a href="https://github.com/AjunaNetwork" target="_blank" rel="noopener">GitHub</a>
+    &middot;
+    <a href="https://discord.gg/ajuna" target="_blank" rel="noopener">Discord</a>
+    &middot; Not for production use
+  </footer>
+
+  <!-- ═══ Toast container ═══ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ═══ Script ═══ -->
+  <script type="module">
+    import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.min.js";
+
+    const ABI = [
+      "function RANDOM_MATERIAL_LEN() view returns (uint256)",
+      "function random(bytes subject) view returns (bytes32 seed, uint256 blockOffset)",
+      "function randomValue(bytes subject) view returns (bytes32)",
+      "function randomInRange(bytes subject, uint256 max) view returns (uint256)"
+    ];
+
+    // ── Network presets ──
+    const NETWORKS = {
+      testnet: {
+        name: "Polkadot Hub Testnet",
+        rpc: "https://eth-rpc-testnet.polkadot.io/",
+        chainId: 420420417,
+        currency: "PAS",
+        explorer: "https://blockscout-testnet.polkadot.io/",
+        explorerLabel: "blockscout-testnet.polkadot.io",
+        contract: "0x95A64688697D0193FE8Deec53F0c9bFFD876e595",
+      },
+      mainnet: {
+        name: "Polkadot Hub",
+        rpc: "https://eth-rpc.polkadot.io/",
+        chainId: 420420419,
+        currency: "DOT",
+        explorer: "https://blockscout.polkadot.io/",
+        explorerLabel: "blockscout.polkadot.io",
+        contract: "0x95A64688697D0193FE8Deec53F0c9bFFD876e595",
+      },
+      localhost: {
+        name: "Localhost (Hardhat)",
+        rpc: "http://127.0.0.1:8545",
+        chainId: 31337,
+        currency: "ETH",
+        explorer: "",
+        explorerLabel: "—",
+        contract: "",
+      },
+      custom: {
+        name: "Custom",
+        rpc: "",
+        chainId: null,
+        currency: "—",
+        explorer: "",
+        explorerLabel: "—",
+        contract: "",
+      },
+    };
+
+    let provider = null;
+    let contract = null;
+    let callCount = 0;
+    let currentNetwork = "mainnet";
+    const history = [];
+
+    const MATERIAL_LEN = 81;
+
+    // ── Expose functions to inline handlers ──
+    window.connectToContract = connectToContract;
+    window.callRandom = callRandom;
+    window.callRandomValue = callRandomValue;
+    window.callRandomInRange = callRandomInRange;
+    window.switchTab = switchTab;
+    window.clearHistory = clearHistory;
+    window.mineBlocks = mineBlocksUI;
+    window.fillRemaining = fillRemaining;
+    window.onNetworkChange = onNetworkChange;
+
+    // ── Network switcher ──
+    function onNetworkChange() {
+      const sel = document.getElementById("networkSelect");
+      const key = sel.value;
+      currentNetwork = key;
+      const net = NETWORKS[key];
+
+      const rpcInput = document.getElementById("rpcUrl");
+      const addrInput = document.getElementById("contractAddr");
+
+      if (key === "custom") {
+        rpcInput.readOnly = false;
+        addrInput.readOnly = false;
+        rpcInput.style.opacity = "";
+        addrInput.style.opacity = "";
+      } else {
+        rpcInput.value = net.rpc;
+        addrInput.value = net.contract;
+        rpcInput.readOnly = false;
+        addrInput.readOnly = false;
+      }
+
+      // Update info bar
+      document.getElementById("netChainId").textContent = net.chainId ?? "—";
+      document.getElementById("netCurrency").textContent = net.currency;
+      const explorerEl = document.getElementById("netExplorer");
+      if (net.explorer) {
+        explorerEl.href = net.explorer;
+        explorerEl.textContent = net.explorerLabel;
+        explorerEl.style.pointerEvents = "";
+      } else {
+        explorerEl.href = "#";
+        explorerEl.textContent = "—";
+        explorerEl.style.pointerEvents = "none";
+      }
+
+      // Toggle mine blocks visibility (only for localhost/hardhat)
+      const isLocal = key === "localhost";
+      document.querySelectorAll(".mine-group, .fill-remaining-btn").forEach(el => {
+        el.style.display = isLocal ? "" : "none";
+      });
+    }
+
+    // ── Connect ──
+    async function connectToContract() {
+      const rpcUrl = document.getElementById("rpcUrl").value.trim();
+      const addr = document.getElementById("contractAddr").value.trim();
+
+      if (!rpcUrl || !addr) {
+        showToast("Please fill in both RPC URL and contract address.", "error");
+        return;
+      }
+
+      setStatus("connecting");
+      const btn = document.getElementById("connectBtn");
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Connecting';
+
+      try {
+        provider = new ethers.JsonRpcProvider(rpcUrl);
+        contract = new ethers.Contract(addr, ABI, provider);
+
+        // Verify the contract exists by calling a view function
+        const matLen = await contract.RANDOM_MATERIAL_LEN();
+        const network = await provider.getNetwork();
+        const blockNum = await provider.getBlockNumber();
+
+        document.getElementById("statMaterial").textContent = matLen.toString();
+        document.getElementById("statChain").textContent = network.chainId.toString();
+        const netPreset = NETWORKS[currentNetwork];
+        document.getElementById("statNetwork").textContent = netPreset ? netPreset.name : (network.name === "unknown" ? "Custom" : network.name);
+        document.getElementById("statBlock").textContent = formatNumber(blockNum);
+
+        document.getElementById("statsBar").style.display = "";
+        document.getElementById("bufferCard").style.display = "";
+        document.getElementById("fnSection").style.display = "";
+
+        setStatus("connected");
+        showToast("Connected to contract successfully.", "success");
+
+        // Show/hide mine buttons based on network
+        const isLocal = currentNetwork === "localhost";
+        document.querySelectorAll(".mine-group, .fill-remaining-btn").forEach(el => {
+          el.style.display = isLocal ? "" : "none";
+        });
+
+        // Initial buffer update + poll
+        await updateBufferFill();
+        startBlockPoller();
+      } catch (err) {
+        setStatus("disconnected");
+        showToast("Connection failed: " + err.message, "error");
+        contract = null;
+        provider = null;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Connect";
+      }
+    }
+
+    // ── Block poller ──
+    let blockInterval = null;
+    function startBlockPoller() {
+      if (blockInterval) clearInterval(blockInterval);
+      blockInterval = setInterval(async () => {
+        try {
+          const n = await provider.getBlockNumber();
+          document.getElementById("statBlock").textContent = formatNumber(n);
+          updateBufferFill();
+        } catch { /* ignore */ }
+      }, 3000);
+    }
+
+    // ── Buffer fill ──
+    async function updateBufferFill() {
+      if (!provider) return;
+      try {
+        const blockNum = await provider.getBlockNumber();
+        // Available = min(blockNum, 81) — same logic as the contract
+        const available = Math.min(blockNum, MATERIAL_LEN);
+        const pct = Math.round((available / MATERIAL_LEN) * 100);
+
+        document.getElementById("bufFilled").textContent = available;
+        document.getElementById("bufBarLabel").textContent = `${available} / ${MATERIAL_LEN}`;
+
+        const bar = document.getElementById("bufBar");
+        bar.style.width = pct + "%";
+        bar.className = available >= MATERIAL_LEN ? "progress-fill full" : "progress-fill";
+
+        const pctEl = document.getElementById("bufPct");
+        pctEl.textContent = pct + "%";
+        pctEl.className = "buffer-pct " + (pct >= 100 ? "full" : pct >= 50 ? "partial" : "low");
+
+        const hint = document.getElementById("bufHint");
+        const fillBtn = document.getElementById("btnFill");
+        if (available >= MATERIAL_LEN) {
+          hint.textContent = "Buffer is full — maximum entropy available";
+          fillBtn.disabled = true;
+          fillBtn.textContent = "Full";
+        } else {
+          const remaining = MATERIAL_LEN - available;
+          hint.textContent = `${remaining} more block${remaining === 1 ? "" : "s"} needed for full entropy`;
+          fillBtn.disabled = false;
+          fillBtn.textContent = `Fill to ${MATERIAL_LEN} (+${remaining})`;
+        }
+      } catch { /* ignore */ }
+    }
+
+    // ── Mine blocks ──
+    async function mineBlocksUI() {
+      if (!provider) return;
+      const countInput = document.getElementById("mineCount");
+      const count = Math.max(1, parseInt(countInput.value) || 1);
+      const btn = document.getElementById("btnMine");
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Mining';
+
+      try {
+        // Use hardhat_mine to mine multiple blocks at once
+        await provider.send("hardhat_mine", ["0x" + count.toString(16)]);
+        const newBlock = await provider.getBlockNumber();
+        document.getElementById("statBlock").textContent = formatNumber(newBlock);
+        await updateBufferFill();
+        showToast(`Mined ${count} block${count === 1 ? "" : "s"} — now at #${formatNumber(newBlock)}`, "success");
+      } catch (err) {
+        // Fallback: try evm_mine one-by-one
+        try {
+          for (let i = 0; i < count; i++) {
+            await provider.send("evm_mine", []);
+          }
+          const newBlock = await provider.getBlockNumber();
+          document.getElementById("statBlock").textContent = formatNumber(newBlock);
+          await updateBufferFill();
+          showToast(`Mined ${count} block${count === 1 ? "" : "s"} — now at #${formatNumber(newBlock)}`, "success");
+        } catch (err2) {
+          showToast("Mine failed: " + err2.message, "error");
+        }
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12h6M12 9v6"/></svg> Mine Blocks';
+      }
+    }
+
+    async function fillRemaining() {
+      if (!provider) return;
+      const blockNum = await provider.getBlockNumber();
+      const available = Math.min(blockNum, MATERIAL_LEN);
+      const remaining = MATERIAL_LEN - available;
+      if (remaining <= 0) {
+        showToast("Buffer is already full!", "success");
+        return;
+      }
+      document.getElementById("mineCount").value = remaining;
+      await mineBlocksUI();
+    }
+
+    // ── Call: random() ──
+    async function callRandom() {
+      if (!contract) return;
+      const subject = document.getElementById("randomSubject").value;
+      const box = document.getElementById("result-random");
+      const btn = document.getElementById("btnRandom");
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>';
+
+      try {
+        const [seed, offset] = await contract.random(ethers.toUtf8Bytes(subject));
+        box.className = "result-box";
+        box.innerHTML = "";
+        box.textContent = `seed:        ${seed}\nblockOffset: ${offset.toString()}`;
+        addCopyButton(box, seed);
+        addHistory("random()", subject, seed, offset.toString());
+      } catch (err) {
+        box.className = "result-box";
+        box.textContent = "Error: " + err.message;
+        showToast(err.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Execute";
+      }
+    }
+
+    // ── Call: randomValue() ──
+    async function callRandomValue() {
+      if (!contract) return;
+      const subject = document.getElementById("valueSubject").value;
+      const box = document.getElementById("result-randomValue");
+      const btn = document.getElementById("btnValue");
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>';
+
+      try {
+        const value = await contract.randomValue(ethers.toUtf8Bytes(subject));
+        const blockNum = await provider.getBlockNumber();
+        box.className = "result-box";
+        box.innerHTML = "";
+        box.textContent = value;
+        addCopyButton(box, value);
+        addHistory("randomValue()", subject, value, blockNum.toString());
+      } catch (err) {
+        box.className = "result-box";
+        box.textContent = "Error: " + err.message;
+        showToast(err.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Execute";
+      }
+    }
+
+    // ── Call: randomInRange() ──
+    async function callRandomInRange() {
+      if (!contract) return;
+      const subject = document.getElementById("rangeSubject").value;
+      const max = document.getElementById("rangeMax").value;
+      const box = document.getElementById("result-randomInRange");
+      const btn = document.getElementById("btnRange");
+
+      if (!max || parseInt(max) <= 0) {
+        showToast("Max must be > 0", "error");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>';
+
+      try {
+        const result = await contract.randomInRange(ethers.toUtf8Bytes(subject), BigInt(max));
+        const blockNum = await provider.getBlockNumber();
+        box.className = "result-box";
+        box.innerHTML = "";
+        box.textContent = `${result.toString()}  (of [0, ${max}))`;
+        addCopyButton(box, result.toString());
+        addHistory("randomInRange()", `"${subject}", ${max}`, result.toString(), blockNum.toString());
+      } catch (err) {
+        box.className = "result-box";
+        box.textContent = "Error: " + err.message;
+        showToast(err.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Execute";
+      }
+    }
+
+    // ── Tab switching ──
+    function switchTab(name) {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelector(`.tab[data-tab="${name}"]`).classList.add("active");
+      document.querySelectorAll(".fn-panel").forEach(p => p.classList.remove("active"));
+      document.getElementById("panel-" + name).classList.add("active");
+    }
+
+    // ── History ──
+    function addHistory(fn, subject, result, block) {
+      callCount++;
+      document.getElementById("statCalls").textContent = callCount;
+      history.unshift({ fn, subject, result, block });
+
+      document.getElementById("historyEmpty").style.display = "none";
+      document.getElementById("historyTable").style.display = "";
+
+      const tbody = document.getElementById("historyBody");
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="color: var(--color-text-muted); font-family: system-ui;">${callCount}</td>
+        <td class="col-fn"><span class="badge badge-purple">${fn}</span></td>
+        <td>${escapeHtml(subject || '""')}</td>
+        <td title="${escapeHtml(result)}">${truncate(result, 24)}</td>
+        <td style="color: var(--color-text-muted);">#${formatNumber(parseInt(block))}</td>
+      `;
+      tbody.prepend(tr);
+    }
+
+    function clearHistory() {
+      history.length = 0;
+      callCount = 0;
+      document.getElementById("statCalls").textContent = "0";
+      document.getElementById("historyBody").innerHTML = "";
+      document.getElementById("historyEmpty").style.display = "";
+      document.getElementById("historyTable").style.display = "none";
+    }
+
+    // ── Copy button ──
+    function addCopyButton(box, text) {
+      const btn = document.createElement("button");
+      btn.className = "copy-btn";
+      btn.textContent = "Copy";
+      btn.onclick = () => {
+        navigator.clipboard.writeText(text).then(() => {
+          btn.textContent = "Copied!";
+          setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+        });
+      };
+      box.appendChild(btn);
+    }
+
+    // ── Status ──
+    function setStatus(state) {
+      const dot = document.getElementById("statusDot");
+      const text = document.getElementById("statusText");
+      dot.className = "status-dot " + state;
+      text.textContent = state === "connected" ? "Connected"
+        : state === "connecting" ? "Connecting…"
+        : "Disconnected";
+    }
+
+    // ── Toast ──
+    function showToast(message, type = "warning") {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 300ms";
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // ── Helpers ──
+    function formatNumber(n) {
+      return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+    }
+    function truncate(str, len) {
+      if (str.length <= len) return str;
+      return str.slice(0, len - 2) + "…";
+    }
+    function escapeHtml(s) {
+      const el = document.createElement("span");
+      el.textContent = s;
+      return el.innerHTML;
+    }
+
+    // ── Init: hide mine buttons for testnet default, show network info ──
+    onNetworkChange();
+  </script>
+</body>
+</html>
