@@ -4,7 +4,7 @@
 
 | Item | Detail |
 |------|--------|
-| **Source** | `contracts/InsecureRandomness.sol` |
+| **Source** | `contracts/InsecureRandomness/InsecureRandomness.sol` |
 | **Compiler** | Solidity ^0.8.28 |
 | **License** | Apache-2.0 |
 | **Dependencies** | None |

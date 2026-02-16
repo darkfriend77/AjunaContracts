@@ -249,7 +249,7 @@ SageCore is **not** upgradable by default. If you need upgradability:
 
 ## Full Example
 
-See the [TestGame.sol](../../contracts/TestGame.sol) contract for a complete
+See the [TestGame.sol](../../contracts/SageCore/TestGame.sol) contract for a complete
 reference implementation that exposes all internal functions for testing.
 
 ```solidity

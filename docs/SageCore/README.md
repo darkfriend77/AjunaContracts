@@ -5,7 +5,7 @@
 
 | Item | Detail |
 |------|--------|
-| **Source** | `contracts/SageCore.sol` |
+| **Source** | `contracts/SageCore/SageCore.sol` |
 | **Compiler** | Solidity ^0.8.20 |
 | **License** | MIT |
 | **Dependencies** | OpenZeppelin `ReentrancyGuard` |

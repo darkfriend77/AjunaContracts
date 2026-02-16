@@ -159,7 +159,7 @@
       // Load bytecode from artifacts if not loaded
       if (!BYTECODE) {
         try {
-          const resp = await fetch("../artifacts/contracts/InsecureRandomness.sol/InsecureRandomness.json");
+          const resp = await fetch("../artifacts/contracts/InsecureRandomness/InsecureRandomness.sol/InsecureRandomness.json");
           const artifact = await resp.json();
           BYTECODE = artifact.bytecode;
         } catch {
