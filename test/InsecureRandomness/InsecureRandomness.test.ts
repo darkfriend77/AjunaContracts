@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
-import { InsecureRandomness } from "../typechain-types";
+import { InsecureRandomness } from "../../typechain-types";
 
 /**
  * Helper: mine a given number of empty blocks on the Hardhat network.
