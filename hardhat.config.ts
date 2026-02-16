@@ -20,6 +20,10 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
+    hardhatNode: {
+      url: "http://127.0.0.1:8545",
+      chainId: 31337,
+    },
     local: {
       url: "http://127.0.0.1:8545",
       chainId: 420420420,

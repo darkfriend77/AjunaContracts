@@ -312,11 +312,11 @@ describe('CasinoJam', function () {
       await cj.connect(machineOwner).createMachine();
       machineId = await cj.playerMachineId(machineOwner.address);
 
-      // Fund machine to pay rent fee
+      // Fund machine to cover rent fee + max reward (stake=1, maxSpins=4 → 1*8192*4 = 32768 per seat)
       const rate = await cj.exchangeRate();
       await cj
         .connect(machineOwner)
-        .deposit(machineId, 1000n, { value: 1000n * rate });
+        .deposit(machineId, 50000n, { value: 50000n * rate });
     });
 
     it('should create a seat and link to machine', async function () {
@@ -461,7 +461,7 @@ describe('CasinoJam', function () {
       const rate = await cj.exchangeRate();
       await cj
         .connect(player2)
-        .deposit(machine2, 1000n, { value: 1000n * rate });
+        .deposit(machine2, 50000n, { value: 50000n * rate });
       const tx2 = await cj.connect(player2).rent(machine2, 1);
       const receipt2 = await tx2.wait();
       const event2 = receipt2?.logs.find((log) => {
@@ -644,7 +644,7 @@ describe('CasinoJam', function () {
       ).to.be.revertedWithCustomError(cj, 'InsufficientCredits');
     });
 
-    it('should revert when machine has insufficient credits', async function () {
+    it('should revert rent when machine has insufficient credits for max reward', async function () {
       // Drain machine by releasing seat, returning it, then withdrawing
       await cj.connect(player1).release(humanId, seatId);
 
@@ -659,32 +659,15 @@ describe('CasinoJam', function () {
           .withdrawCredits(machineId, machineBal);
       }
 
-      // Re-fund machine with just enough for rent but not gamble
+      // Re-fund machine with just enough for rent fee but not max reward
       const rate = await cj.exchangeRate();
       await cj
         .connect(machineOwner)
         .deposit(machineId, 20n, { value: 20n * rate });
 
-      // Rent again
-      const tx = await cj.connect(machineOwner).rent(machineId, 1);
-      const receipt = await tx.wait();
-      const event = receipt?.logs.find((log) => {
-        try {
-          return cj.interface.parseLog(log as any)?.name === 'SeatRented';
-        } catch {
-          return false;
-        }
-      });
-      const newSeatId = cj.interface.parseLog(event as any)!.args.seatId;
-
-      // Reserve seat again
-      await cj.connect(player1).reserve(humanId, newSeatId, 1);
-      await mineBlocks(1);
-
+      // Rent should revert because machine can't cover max reward
       await expect(
-        cj
-          .connect(player1)
-          .gamble(humanId, trackerId, newSeatId, machineId, 1)
+        cj.connect(machineOwner).rent(machineId, 1)
       ).to.be.revertedWithCustomError(cj, 'MachineCantCoverReward');
     });
 
@@ -965,7 +948,7 @@ describe('CasinoJam', function () {
       const rate = await cj.exchangeRate();
       await cj
         .connect(machineOwner)
-        .deposit(machineId, 1000n, { value: 1000n * rate });
+        .deposit(machineId, 50000n, { value: 50000n * rate });
       await cj.connect(machineOwner).rent(machineId, 1);
 
       await expect(

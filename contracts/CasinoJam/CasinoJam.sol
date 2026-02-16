@@ -722,6 +722,15 @@ contract CasinoJam is SageCore {
     // Fee goes to collectedFees (owner can withdraw)
     collectedFees += fee * exchangeRate;
 
+    // Ensure machine can cover max reward per seat after rent fee deduction.
+    // Each seat could produce a max payout, so check against (linked+1) seats.
+    uint256 stake = _banditStake(mp);
+    uint8 maxSpins = _banditMaxSpins(mp);
+    uint256 maxRewardPerSeat = _maxMachineReward(stake, maxSpins);
+    uint256 totalMaxReward = maxRewardPerSeat * uint256(linked + 1);
+    if (assetBalances[machineId] < totalMaxReward)
+      revert MachineCantCoverReward();
+
     // Increment SeatLinked on machine
     mp = mp.writeHighNibble(7, linked + 1);
     machine.payload = mp;
@@ -775,6 +784,16 @@ contract CasinoJam is SageCore {
       _rentDurationBlocks(_seatRentDuration(sp));
     uint256 reservBlocks = _reservationDurationBlocks(reservationDuration);
     if (block.number > seatEnd - reservBlocks) revert SeatExpiredForReservation();
+
+    // Verify the machine backing this seat can cover max reward
+    {
+      uint32 machId = _seatMachineId(sp);
+      Asset storage machine = _getExistingAsset(uint256(machId));
+      bytes32 mp = machine.payload;
+      uint256 maxReward = _maxMachineReward(_banditStake(mp), _banditMaxSpins(mp));
+      if (assetBalances[uint256(machId)] < maxReward)
+        revert MachineCantCoverReward();
+    }
 
     // Calculate and pay reservation fee
     uint16 playerFee = _seatPlayerFee(sp);
